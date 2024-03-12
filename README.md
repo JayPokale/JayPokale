@@ -2,11 +2,11 @@
 
 ###
 
-<h1 align="left" style="border:none">Jay Pokale</h1>
+<p style="align:left; font-size:xx-large; font-weight:bold">Jay Pokale</p>
 
 ###
 
-<h2 align="left" style="border:none">1.42% - LC Contest Rating<br>0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
+<p style="align:left; font-size:large; font-weight:bold">1.42% - LC Contest Rating<br>0.1% - LC Problem Solving<br>Turning Algorithm into Art</p>
 
 ###
 
