@@ -2,11 +2,11 @@
 
 ###
 
-<h1 align="left">Jay Pokale</h1>
+<h1 align="left" style="border:none">Jay Pokale</h1>
 
 ###
 
-<h2 align="left">1.42% - LC Contest Rating<br>0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
+<h2 align="left" style="border:none">1.42% - LC Contest Rating<br>0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
 
 ###
 
@@ -119,9 +119,3 @@
 <img src="https://raw.githubusercontent.com/jaypokale/jaypokale/output/snake.svg" alt="Snake animation" />
 
 ###
-
-<style>
-h1, h2 {
-   border: none!important;
-}
-</style>
