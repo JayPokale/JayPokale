@@ -2,13 +2,13 @@
 
 ###
 
-<h2 align="center">1.42% - LC Contest Rating<br>0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
-
-###
-
 <div align="center">
   <img height="" src="https://avatars.githubusercontent.com/u/99467494?v=4"  />
 </div>
+
+###
+
+<h2 align="center">1.42% - LC Contest Rating<br>0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
 
 ###
 
