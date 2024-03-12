@@ -40,6 +40,8 @@
 
 ###
 
+<br clear="both">
+
 <div align="center">
   <img src="https://skillicons.dev/icons?i=js" height="40" alt="javascript logo"  />
   <img width="40" />
@@ -111,6 +113,8 @@
 </div>
 
 ###
+
+<br clear="both">
 
 <img src="https://raw.githubusercontent.com/jaypokale/jaypokale/output/snake.svg" alt="Snake animation" />
 
