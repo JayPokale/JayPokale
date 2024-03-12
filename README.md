@@ -119,3 +119,9 @@
 <img src="https://raw.githubusercontent.com/jaypokale/jaypokale/output/snake.svg" alt="Snake animation" />
 
 ###
+
+<style>
+h1, h2 {
+   border: none!important;
+}
+</style>
