@@ -1,16 +1,12 @@
-<img align="left" height="270" src="https://avatars.githubusercontent.com/u/99467494?v=4"  />
+<h1 align="center">Jay Pokale</h1>
 
 ###
 
-<p style="align:left; font-size:xx-large; font-weight:bold">Jay Pokale</p>
+<h2 align="center">1.42% - LC Contest Rating<br>0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
 
 ###
 
-<p style="align:left; font-size:large; font-weight:bold">1.42% - LC Contest Rating<br>0.1% - LC Problem Solving<br>Turning Algorithm into Art</p>
-
-###
-
-<div align="left">
+<div align="center">
   <a href="https://mail.google.com/mail/u/0/#inbox?compose=DmwnWrRsqQBNLGwlDJvgCwKcFPHfjmGgBPpktzTptCjpjQDLRkxJZrSCXCQrnmqsWHBFxGccgbgl" target="_blank">
     <img src="https://raw.githubusercontent.com/maurodesouza/profile-readme-generator/master/src/assets/icons/social/gmail/default.svg" width="64" height="40" alt="gmail logo"  />
   </a>
