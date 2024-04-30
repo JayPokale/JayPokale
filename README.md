@@ -8,7 +8,7 @@
 
 ###
 
-<h2 align="center">Top 1.42% - LC Contest Rating<br>Top 0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
+<h2 align="center">Top 1.17% - Competitive Programmer in world<br>Top 0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
 
 ###
 
