@@ -8,10 +8,7 @@
 
 ###
 
-<h2 align="center">Open Source Developer</h2>
-<h2 align="center">Belongs to top 1.17% competitive programers in world</h2>
-<h2 align="center">Create my own data structures and algorithms</h2>
-<h2 align="center">Create to Dare2Solve. Currently 23000+ followers</h2>
+<h2 align="center">Open Source Developer<br/>Belongs to top 1.17% competitive programers in world<br/>Create my own data structures and algorithms<br/>Founder of Dare2Solve. Currently 23000+ followers</h2>
 
 ###
 
