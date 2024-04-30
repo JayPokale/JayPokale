@@ -8,7 +8,10 @@
 
 ###
 
-<h2 align="center">Top 1.17% - Competitive Programmer in world<br>Top 0.1% - LC Problem Solving<br>Turning Algorithm into Art</h2>
+<h2 align="center">Open Source Developer</h2>
+<h2 align="center">Belongs to top 1.17% competitive programers in world</h2>
+<h2 align="center">Create my own data structures and algorithms</h2>
+<h2 align="center">Create to Dare2Solve. Currently 23000+ followers</h2>
 
 ###
 
