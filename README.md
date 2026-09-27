@@ -11,7 +11,7 @@
 - **[Chisle](https://github.com/JayPokale/Chisle)** makes AI coding agents talk less, build less and say more. 500+ stars, zero dependencies, and it publishes the benchmarks it loses.
 - **Research** at IIT Hyderabad: certified defenses for GraphRAG, semantic-cache integrity, and multi-timescale continual learning.
 - **LeetCode Guardian** (top 1%, peak rating 2285) and **Codeforces Expert**.
-- Founded **[Dare2Solve](http://dare2solve.jaypokale.me)**, a math community of 20,000+ people.
+- Founded **[Dare2Solve](https://dare2solve.jaypokale.me)**, a math community of 20,000+ people.
 - Powerlifter. The only PRs I set without a code review.
 
 <div align="center">
