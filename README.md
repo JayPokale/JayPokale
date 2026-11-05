@@ -4,11 +4,12 @@
 
 **Researcher at IIT Hyderabad · Top 1% competitive programmer · Creator of [Chisle](https://github.com/JayPokale/Chisle) · Founder of Dare2Solve**
 
-[jaypokale.me](https://jaypokale.me) · [LinkedIn](https://www.linkedin.com/in/JayPokale) · [X](https://x.com/JayPokale35) · [LeetCode](https://leetcode.com/u/jaypokale) · [Codeforces](https://codeforces.com/profile/rdx_panther) · [Email](mailto:jay.pokale.35@gmail.com)
+[jaypokale.me](https://jaypokale.me) · [LinkedIn](https://www.linkedin.com/in/JayPokale) · [X](https://x.com/JayPokale35) · [LeetCode](https://leetcode.com/u/jaypokale) · [Codeforces](https://codeforces.com/profile/rdx_panther) · [dev.to](https://dev.to/jaypokale) · [Email](mailto:jay.pokale.35@gmail.com)
 
 </div>
 
-- **[Chisle](https://github.com/JayPokale/Chisle)** makes AI coding agents talk less, build less and say more. 500+ stars, zero dependencies, and it publishes the benchmarks it loses.
+- **[Chisle](https://github.com/JayPokale/Chisle)** makes AI coding agents talk less, build less and say more. 700+ stars, 13 agents, zero dependencies, and it publishes the benchmarks it loses.
+- **Upstream**: 24 merged PRs to [ClickHouse](https://github.com/ClickHouse/ClickHouse/pulls?q=is%3Apr+author%3AJayPokale+is%3Amerged), plus [LanceDB](https://github.com/lancedb/lancedb/pulls?q=is%3Apr+author%3AJayPokale+is%3Amerged), Interledger, Temporal and Ballerina.
 - **Research** at IIT Hyderabad: certified defenses for GraphRAG, semantic-cache integrity, and multi-timescale continual learning.
 - **LeetCode Guardian** (top 1%, peak rating 2285) and **Codeforces Expert**.
 - Founded **[Dare2Solve](https://dare2solve.jaypokale.me)**, a math community of 20,000+ people.
