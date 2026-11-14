@@ -1,0 +1,40 @@
+name: Profile art
+
+# Redraws the animated profile panels with live GitHub numbers and force-pushes
+# them as the only commit on the `output` branch, which the README reads from.
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [scripts/build.js, .github/workflows/profile.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: profile-art
+  cancel-in-progress: true
+
+jobs:
+  draw:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Draw the panels
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/build.js out
+      - name: Publish to the output branch
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          git init -q -b output
+          git add .
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -q -m 'Update profile art'
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" output
