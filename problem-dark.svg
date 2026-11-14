@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="300" viewBox="0 0 880 300" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif" xml:space="preserve" role="img" aria-label="Problem J. Time limit: one lifetime. Memory: unbounded. Sleep: segfaulted. Input: an unreasonable problem. Output: a shipped, verified system. Scoring: partial credit not accepted. Note: it is guaranteed that a solution exists.">
+<rect x="0.5" y="0.5" width="879" height="299" rx="14" fill="#0d1117" stroke="#30363d"/>
+<text x="440" y="54" font-size="30" font-weight="800" fill="#e6edf3" text-anchor="middle">Problem J.</text>
+<text x="440" y="84" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace" font-size="13.5" fill="#8b949e" text-anchor="middle">time limit: one lifetime · memory: unbounded · sleep: segfaulted</text>
+<path d="M140 106H740" stroke="#30363d"/>
+<g><animate attributeName="opacity" values="1;1;0;0" keyTimes="0.0000;0.9500;0.9800;1.0000" dur="10s" repeatCount="indefinite"/>
+<clipPath id="row0"><rect x="330" y="126" width="277" height="32"><animate attributeName="width" values="0;0;277;277" keyTimes="0.0000;0.0750;0.1350;1.0000" dur="10s" repeatCount="indefinite"/></rect></clipPath>
+<text x="306" y="148" font-size="16" font-weight="700" fill="#f0a85a" text-anchor="end" opacity="1"><animate attributeName="opacity" values="0;0;1;1" keyTimes="0.0000;0.0600;0.0800;1.0000" dur="10s" repeatCount="indefinite"/>Input</text>
+<text x="330" y="148" font-size="17" fill="#c9d1d9" clip-path="url(#row0)">an unreasonable problem.</text>
+<clipPath id="row1"><rect x="330" y="164" width="308.6" height="32"><animate attributeName="width" values="0;0;308.6;308.6" keyTimes="0.0000;0.1450;0.2050;1.0000" dur="10s" repeatCount="indefinite"/></rect></clipPath>
+<text x="306" y="186" font-size="16" font-weight="700" fill="#f0a85a" text-anchor="end" opacity="1"><animate attributeName="opacity" values="0;0;1;1" keyTimes="0.0000;0.1300;0.1500;1.0000" dur="10s" repeatCount="indefinite"/>Output</text>
+<text x="330" y="186" font-size="17" fill="#c9d1d9" clip-path="url(#row1)">a shipped, verified system.</text>
+<clipPath id="row2"><rect x="330" y="202" width="319.1" height="32"><animate attributeName="width" values="0;0;319.1;319.1" keyTimes="0.0000;0.2150;0.2750;1.0000" dur="10s" repeatCount="indefinite"/></rect></clipPath>
+<text x="306" y="224" font-size="16" font-weight="700" fill="#f0a85a" text-anchor="end" opacity="1"><animate attributeName="opacity" values="0;0;1;1" keyTimes="0.0000;0.2000;0.2200;1.0000" dur="10s" repeatCount="indefinite"/>Scoring</text>
+<text x="330" y="224" font-size="17" fill="#c9d1d9" clip-path="url(#row2)">partial credit not accepted.</text>
+<clipPath id="row3"><rect x="330" y="240" width="445.6" height="32"><animate attributeName="width" values="0;0;445.6;445.6" keyTimes="0.0000;0.2850;0.3450;1.0000" dur="10s" repeatCount="indefinite"/></rect></clipPath>
+<text x="306" y="262" font-size="16" font-weight="700" fill="#3fb950" text-anchor="end" opacity="1"><animate attributeName="opacity" values="0;0;1;1" keyTimes="0.0000;0.2700;0.2900;1.0000" dur="10s" repeatCount="indefinite"/>Note</text>
+<text x="330" y="262" font-size="17" fill="#e6edf3" clip-path="url(#row3)">it is guaranteed that a solution exists.</text>
+</g>
+</svg>
