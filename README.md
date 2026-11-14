@@ -18,8 +18,15 @@
 
 <p align="center">
   <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/problem-dark.svg">
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/problem-light.svg" width="880" alt="Problem J. Time limit: one lifetime. Memory: unbounded. Sleep: segfaulted. Input: an unreasonable problem. Output: a shipped, verified system. Scoring: partial credit not accepted. Note: it is guaranteed that a solution exists.">
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/stats-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/stats-light.svg" width="880" alt="Live numbers: stars on Chisle, merged upstream pull requests, peak LeetCode rating 2285, Dare2Solve community of 20k+.">
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/stats-light.svg" width="880" alt="Live numbers: stars on Chisle and pull requests merged upstream; LeetCode peak 2285, Codeforces 1799, Dare2Solve community of 20k+.">
   </picture>
 </p>
 
@@ -58,7 +65,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/stack-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/stack-light.svg" width="880" alt="Stack: C++, TypeScript, JavaScript, Python, Go, React, Next.js, Node.js, Tailwind, three.js, Docker, ClickHouse.">
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/stack-light.svg" width="880" alt="Toolbox: C++, TypeScript, Python, Go, JavaScript, LaTeX; RAG, hybrid retrieval, reranking, LLM evals, MCP, PyTorch; React and Next, Node, Tailwind, three.js, Docker, Cloudflare Workers.">
   </picture>
 </p>
 
@@ -68,5 +75,12 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/lift-dark.svg">
     <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/lift-light.svg" width="880" alt="Powerlifter. The only PRs I set without a code review.">
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/verdict-dark.svg">
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/verdict-light.svg" width="880" alt="Verdict: Accepted. Every problem here started unsolved. If yours is interesting enough, it won't stay that way.">
   </picture>
 </p>
