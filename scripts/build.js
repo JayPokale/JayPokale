@@ -1,7 +1,10 @@
 #!/usr/bin/env node
-// Draws the animated profile art: a -dark and a -light SVG per panel, plus the
-// link pills. Live numbers come from the GitHub API only; everything else is
-// written below. Plain SVG + SMIL, so it animates inside GitHub's <img> sandbox.
+// Draws the profile art: a -dark and a -light SVG per panel, plus the link
+// pills. Live numbers come from the GitHub API only; everything else is written
+// below. Plain SVG + SMIL, so it animates inside GitHub's <img> sandbox.
+//
+// Every animation plays once and holds its last frame. The base attributes are
+// that last frame, so a renderer without SMIL shows the finished panel.
 //
 // Run: GITHUB_TOKEN=... node scripts/build.js <out-dir>
 // .github/workflows/profile.yml runs it every 6 hours and publishes `output`.
@@ -11,33 +14,23 @@ const fs = require('fs');
 const path = require('path');
 
 const LOGIN = 'JayPokale';
-const ROLES = (d) => [
-  'researcher @ IIT Hyderabad',
-  `creator of Chisle · ${d.chisle.toLocaleString('en-US')} stars`,
-  'LeetCode Guardian · Codeforces Expert',
-  `${d.clickhouse} merged PRs to ClickHouse`,
-  'founder of Dare2Solve · 20k+ community',
-  'modesty was cut in code review',
+// The hero opens on this first draft; a chisel cuts it down to BIO.
+const FLUFF = 'Highly passionate, results-driven and detail-oriented engineer who truly loves leveraging cutting-edge technologies to deliver innovative, scalable and high-impact solutions in fast-paced, dynamic environments, always eager to learn, grow and make a real difference.';
+const BIO = ['Database internals, retrieval security and coding agents:', 'fixed upstream, proved on paper, starred on GitHub.'];
+const ROLE = ['Researcher at IIT Hyderabad', 'Creator of Chisle', 'Nagpur, India'];
+// Thesis titles and one-liners, as jaypokale.me states them.
+const RESEARCH = [
+  ['Corroboration Is All You Can Certify', 'Poison a knowledge graph; I prove how much of the answer is still true.', 'GraphRAG · certified robustness'],
+  ['Cache Me If You Can', "Semantic caches can serve an attacker's answer to your question.", ''],
+  ['Some Memories Take Time', "Zipf's law fixes how many learning timescales a model needs: about nine.", 'continual learning'],
 ];
-const CHIPS = ['IIT Hyderabad', 'Top 1% CP', 'Dare2Solve founder'];
-// The whoami terminal: [key, value] rows; a key of '' continues the row above.
-const ABOUT = [
-  ['building', 'Chisle · AI coding agents that talk less, build less, say more'],
-  ['research', '"Corroboration Is All You Can Certify" · GraphRAG'],
-  ['', '"Cache Me If You Can" · semantic caches, 63% → 0'],
-  ['', '"Some Memories Take Time" · continual learning'],
-  ['upstream', 'ClickHouse · LanceDB · Interledger · Temporal · Ballerina'],
-  ['ranked', 'LeetCode Guardian (top 1%) · Codeforces Expert'],
-  ['founded', 'Dare2Solve · a math community of 20,000+'],
-];
-// The toolbox, by era (from jaypokale.me): [row label, chips].
+// Chisle's published results: [label, share kept, value].
+const CHISLE = [['answer length', 0.55, '−45%'], ['oversized tool output', 0.52, '−48%'], ['graded answers still correct', 1, '156 / 156']];
 const STACK = [
   ['languages', ['C++', 'TypeScript', 'Python', 'Go', 'JavaScript', 'LaTeX']],
   ['AI / retrieval', ['RAG', 'hybrid retrieval', 'reranking', 'LLM evals', 'MCP', 'PyTorch']],
   ['web & infra', ['React · Next', 'Node', 'Tailwind', 'three.js', 'Docker', 'Cloudflare Workers']],
 ];
-// The page's frame: a judge's problem statement.
-const PROBLEM = [['Input', 'an unreasonable problem.'], ['Output', 'a shipped, verified system.'], ['Scoring', 'partial credit not accepted.'], ['Note', 'it is guaranteed that a solution exists.']];
 // Upstream organisations to feature, in GitHub owner -> display name form.
 const ORGS = { ClickHouse: 'ClickHouse', interledger: 'Interledger', lancedb: 'LanceDB', 'lance-format': 'LanceDB', 'ballerina-platform': 'Ballerina', temporalio: 'Temporal', pydantic: 'Pydantic', WICG: 'W3C WICG' };
 const LINKS = [
@@ -55,22 +48,33 @@ const THEMES = {
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const r1 = (n) => Math.round(n * 10) / 10;
+const r2 = (n) => Math.round(n * 100) / 100;
 const mono = (size) => ` font-family="${MONO}" font-size="${size}"`;
 const fmt = (n) => n.toLocaleString('en-US');
+let seed = 1;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
-// One looping SMIL timeline; pts: [[seconds, value], ...] in time order.
-function anim(attr, pts, dur, { ease = false, discrete = false, type } = {}) {
-  const p = pts.slice();
-  if (p[0][0] > 0) p.unshift([0, p[0][1]]);
-  if (p[p.length - 1][0] < dur) p.push([dur, p[p.length - 1][1]]);
+// One SMIL timeline that plays once and holds its last value.
+// pts: [[seconds, value], ...] in time order; it ends at the last point.
+// spline: one keySplines entry for every segment, or a single one for all.
+function anim(attr, pts, { ease = false, spline, discrete = false, type } = {}) {
+  const held = pts[0][0] > 0; // the value holds still until the first point
+  const p = held ? [[0, pts[0][1]], ...pts] : pts.slice();
+  const dur = p[p.length - 1][0];
   const tag = type ? 'animateTransform' : 'animate';
   let a = `<${tag} attributeName="${attr}"${type ? ` type="${type}"` : ''} values="${p.map((x) => x[1]).join(';')}"` +
-    ` keyTimes="${p.map((x) => (x[0] / dur).toFixed(4)).join(';')}" dur="${dur}s" repeatCount="indefinite"`;
+    ` keyTimes="${p.map((x) => (x[0] / dur).toFixed(4)).join(';')}" dur="${r2(dur)}s" fill="freeze"`;
+  const n = p.length - 1;
   if (discrete) a += ' calcMode="discrete"';
-  else if (ease) a += ` calcMode="spline" keySplines="${Array(p.length - 1).fill('0.4 0 0.2 1').join(';')}"`;
+  else if (spline || ease) {
+    const s = Array.isArray(spline) ? [...(held ? ['0 0 1 1'] : []), ...spline] : Array(n).fill(spline || '0.4 0 0.2 1');
+    a += ` calcMode="spline" keySplines="${s.join(';')}"`;
+  }
   return a + '/>';
 }
-const shown = (t0, t1, dur, f = 0.3) => anim('opacity', [[t0, 0], [t0 + f, 1], [t1 - f, 1], [t1, 0]], dur);
+const fadeIn = (t0, f = 0.4) => anim('opacity', [[t0, 0], [t0 + f, 1]], { ease: true });
+const riseIn = (t0, dy = 8, f = 0.5) => anim('transform', [[t0, `0 ${dy}`], [t0 + f, '0 0']], { type: 'translate', ease: true });
+const FALL = '0.5 0 1 1'; // ease-in, for things dropping away
 
 function svg(t, w, h, label, body, defs = '', rx = 14) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" font-family="${SANS}" xml:space="preserve" role="img" aria-label="${esc(label)}">
@@ -83,227 +87,222 @@ const backdrop = (t, w, h, cx = 0.85) =>
   [`<pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" fill="${t.dot}"/></pattern>` +
     `<radialGradient id="glow" cx="${cx}" cy="0.2" r="0.7"><stop offset="0" stop-color="${t.fill}" stop-opacity="${t.glow}"/><stop offset="1" stop-color="${t.fill}" stop-opacity="0"/></radialGradient>`,
   `<rect x="1" y="1" width="${w - 2}" height="${h - 2}" rx="14" fill="url(#dots)"/><rect x="1" y="1" width="${w - 2}" height="${h - 2}" rx="14" fill="url(#glow)"/>`];
+// A regular polygon with a flat top: the avatar is cut, not rounded.
+const facets = (cx, cy, r, n) => Array.from({ length: n }, (_, i) => {
+  const a = -Math.PI / 2 + Math.PI / n + (i * 2 * Math.PI) / n;
+  return `${r1(cx + r * Math.cos(a))},${r1(cy + r * Math.sin(a))}`;
+}).join(' ');
 
-// ── Hero: avatar with a turning ring, name, typed roles ──────────────────────
+// ── Hero: the bio is chiselled from a first draft, then the numbers ─────────
 function hero(t, d) {
-  const W = 880, H = 300, X = 262, Y = 166, FS = 20, CW = FS * ADV, TYPE = 1.1, HOLD = 1.7, DEL = 0.5, SLOT = TYPE + HOLD + DEL + 0.2;
-  const roles = ROLES(d), D = r1(SLOT * roles.length);
+  const W = 880, H = 420, AX = 124, AY = 136, R = 76, N = 16, X = 236;
   const [bgDefs, bg] = backdrop(t, W, H);
-  const defs = bgDefs + `<clipPath id="face"><circle cx="130" cy="150" r="80"/></clipPath>` +
-    `<linearGradient id="ring" x1="0" x2="1"><stop offset="0" stop-color="${t.fill}"/><stop offset="1" stop-color="${t.fill}" stop-opacity="0"/></linearGradient>` +
-    roles.map((r, i) => {
-      const t0 = i * SLOT, w = r1((r.length + 2) * CW);
-      return `<clipPath id="role${i}"><rect x="${X}" y="${Y - FS}" width="${i === 0 ? w : 0}" height="${FS * 1.5}">` +
-        anim('width', [[t0, 0], [t0 + TYPE, w], [t0 + TYPE + HOLD, w], [t0 + TYPE + HOLD + DEL, 0]], D) + '</rect></clipPath>';
-    }).join('');
+  const ringLen = r1(N * 2 * (R + 9) * Math.sin(Math.PI / N));
+  const defs = bgDefs + `<clipPath id="face"><polygon points="${facets(AX, AY, R, N)}"/></clipPath>` +
+    `<linearGradient id="blade" x1="0" x2="1"><stop offset="0" stop-color="${t.accent}" stop-opacity="0"/><stop offset="0.5" stop-color="${t.accent}" stop-opacity="0.4"/><stop offset="1" stop-color="${t.accent}" stop-opacity="0"/></linearGradient>`;
   const o = [bg,
-    `<circle cx="130" cy="150" r="92" fill="none" stroke="${t.border}" stroke-width="2"/>`,
-    `<circle cx="130" cy="150" r="92" fill="none" stroke="url(#ring)" stroke-width="4" stroke-linecap="round" stroke-dasharray="200 380">` +
-      `<animateTransform attributeName="transform" type="rotate" values="0 130 150;360 130 150" dur="6s" repeatCount="indefinite"/></circle>`,
-    d.avatar ? `<image href="${d.avatar}" x="50" y="70" width="160" height="160" clip-path="url(#face)"/>` : `<circle cx="130" cy="150" r="80" fill="${t.card}"/>`,
-    `<text x="${X}" y="118" font-size="46" font-weight="800" letter-spacing="-1" fill="${t.text}">Jay Pokale</text>`];
-  roles.forEach((r, i) => o.push(`<text x="${X}" y="${Y}"${mono(FS)} clip-path="url(#role${i})"><tspan fill="${t.accent}">&gt; </tspan><tspan fill="${t.soft}">${esc(r)}</tspan></text>`));
-  // One caret that follows whichever role is being typed, blinking while it holds.
-  const cx = [];
-  roles.forEach((r, i) => {
-    const t0 = i * SLOT, w = (r.length + 2) * CW;
-    cx.push([t0, X], [t0 + TYPE, r1(X + w)], [t0 + TYPE + HOLD, r1(X + w)], [t0 + TYPE + HOLD + DEL, X]);
+    d.avatar ? `<image href="${d.avatar}" x="${AX - R}" y="${AY - R}" width="${2 * R}" height="${2 * R}" preserveAspectRatio="xMidYMid slice" clip-path="url(#face)"/>` : `<polygon points="${facets(AX, AY, R, N)}" fill="${t.card}"/>`,
+    `<polygon points="${facets(AX, AY, R + 9, N)}" fill="none" stroke="${t.fill}" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="${ringLen}" stroke-dashoffset="0">` +
+      anim('stroke-dashoffset', [[0.1, ringLen], [1.4, 0]], { ease: true }) + '</polygon>',
+    `<text x="${X}" y="98" font-size="44" font-weight="800" letter-spacing="-1" fill="${t.text}">Jay Pokale</text>`,
+    `<text x="${X}" y="130" font-size="15" fill="${t.muted}">${ROLE.map(esc).join(`<tspan fill="${t.fill}">  ·  </tspan>`)}</text>`];
+
+  // The draft, word by word, so each word can fall as the chisel passes it.
+  const FS = 13.5, CW = FS * ADV, MAXC = Math.floor((W - 40 - X) / CW), LH = 20, FY = 170;
+  const lines = [];
+  for (const w of FLUFF.split(' ')) {
+    const l = lines[lines.length - 1];
+    if (!l || l.len + 1 + w.length > MAXC) lines.push({ len: w.length, words: [[w, 0]] });
+    else { l.words.push([w, l.len + 1]); l.len += 1 + w.length; }
+  }
+  const span = MAXC * CW, T0 = 0.9, T1 = 2.1, at = (x) => T0 + ((x - X) / span) * (T1 - T0);
+  seed = 11;
+  lines.forEach((l, i) => l.words.forEach(([w, c]) => {
+    const x = r1(X + c * CW), tw = r2(at(x + (w.length * CW) / 2));
+    o.push(`<g opacity="0">${anim('opacity', [[0, 1], [tw, 1], [tw + 0.35, 0]])}` +
+      `<g>${anim('transform', [[tw, '0 0'], [tw + 0.45, `${r1(rnd() * 8 - 2)} ${r1(14 + rnd() * 14)}`]], { type: 'translate', spline: FALL })}` +
+      `<text x="${x}" y="${FY + i * LH}"${mono(FS)} fill="${t.faint}">${esc(w)}</text></g></g>`);
+  }));
+  // Chips thrown off the blade.
+  const top = FY - 14, bottom = FY + (lines.length - 1) * LH + 4;
+  for (let k = 0; k < 26; k++) {
+    const ts = r2(T0 + ((k + rnd() * 0.8) * (T1 - T0)) / 26), x = r1(X + ((ts - T0) / (T1 - T0)) * span), y = r1(top + rnd() * (bottom - top));
+    const s = 1.8 + rnd() * 3.2, a = rnd() * Math.PI, dx = 6 + rnd() * 22, up = 4 + rnd() * 10, dy = 28 + rnd() * 30;
+    const tri = [0, 2.1, 4.3].map((b) => `${r1(s * Math.cos(a + b))},${r1(s * Math.sin(a + b))}`).join(' ');
+    o.push(`<g opacity="0">${anim('opacity', [[ts - 0.01, 0], [ts, 1], [ts + 0.45, 0.9], [ts + 0.7, 0]])}` +
+      `<g>${anim('transform', [[ts, `${x} ${y}`], [ts + 0.18, `${r1(x + dx * 0.4)} ${r1(y - up)}`], [ts + 0.7, `${r1(x + dx)} ${r1(y + dy)}`]], { type: 'translate', spline: ['0 0 0.6 1', FALL] })}` +
+      `<polygon points="${tri}" fill="${k % 3 ? t.muted : t.fill}"/></g></g>`);
+  }
+  // The blade.
+  const by = FY - 24, bh = (lines.length - 1) * LH + 34;
+  o.push(`<g opacity="0">${anim('opacity', [[T0 - 0.2, 0], [T0 - 0.05, 1], [T1, 1], [T1 + 0.25, 0]])}` +
+    `<g>${anim('transform', [[T0 - 0.05, `${r1(X - 12)} 0`], [T1, `${r1(X + span + 6)} 0`]], { type: 'translate' })}` +
+    `<rect x="-16" y="${by}" width="32" height="${bh}" fill="url(#blade)"/>` +
+    `<rect x="-1.5" y="${by}" width="3" height="${bh}" rx="1.5" fill="${t.accent}"/>` +
+    `<path d="M-6 ${by - 9}h12l-6 9z" fill="${t.accent}"/></g></g>`);
+  // What is left.
+  BIO.forEach((s, i) => {
+    const t0 = T1 + 0.1 + i * 0.18;
+    o.push(`<g>${fadeIn(t0, 0.45)}<g>${riseIn(t0)}<text x="${X}" y="${192 + i * 28}" font-size="19" font-weight="${i ? 400 : 650}" fill="${i ? t.soft : t.text}">${esc(s)}</text></g></g>`);
   });
-  o.push(`<rect x="${r1(X + (roles[0].length + 2) * CW)}" y="${Y - FS + 2}" width="${r1(CW)}" height="${FS + 3}" fill="${t.accent}">` +
-    anim('x', cx, D) + anim('opacity', [[0, 1], [0.5, 0]], 1, { discrete: true }) + '</rect>',
-    `<text x="${X}" y="206" font-size="15" fill="${t.muted}">Nagpur, India</text>`);
-  let x = X;
-  CHIPS.forEach((c, i) => {
-    const w = r1(c.length * 12.5 * ADV + 26);
-    o.push(`<rect x="${r1(x)}" y="228" width="${w}" height="30" rx="15" fill="${t.card}" stroke="${t.border}"/>` +
-      `<rect x="${r1(x)}" y="228" width="${w}" height="30" rx="15" fill="${t.fill}" fill-opacity="0.14" stroke="${t.fill}" opacity="0">${anim('opacity', [[0.6 + i * 0.5, 0], [0.9 + i * 0.5, 1], [1.6 + i * 0.5, 1], [2.1 + i * 0.5, 0]], 5)}</rect>` +
-      `<text x="${r1(x + w / 2)}" y="248"${mono(12.5)} fill="${t.soft}" text-anchor="middle">${esc(c)}</text>`);
-    x += w + 10;
+  const n0 = FLUFF.split(' ').length, n1 = BIO.join(' ').split(' ').length;
+  o.push(`<text x="${X}" y="254"${mono(12)} fill="${t.faint}">${fadeIn(T1 + 0.6)}chiseled · ${n0} → ${n1} words <tspan fill="${t.accent}">−${Math.round((1 - n1 / n0) * 100)}%</tspan></text>`);
+
+  // The numbers, there from the start.
+  o.push(`<path d="M32 282H${W - 32}" stroke="${t.border}"/>`);
+  const M = [
+    [fmt(d.featured), 'PRs merged upstream', d.open ? `+${d.open} in review` : 'and counting'],
+    [fmt(d.chisle), 'stars on Chisle', 'open source · MIT'],
+    ['2,285', 'LeetCode peak', 'Guardian · top 1%'],
+    ['1,799', 'Codeforces', 'Expert'],
+    ['20k+', 'Dare2Solve members', 'a community I founded'],
+  ];
+  const cw = (W - 64) / M.length;
+  M.forEach(([n, label, sub], i) => {
+    const x = r1(32 + i * cw);
+    if (i) o.push(`<path d="M${r1(x - 16)} 306V390" stroke="${t.border}"/>`);
+    o.push(`<g>${fadeIn(0.15 + i * 0.07, 0.5)}` +
+      `<text x="${x}" y="340" font-size="30" font-weight="800" letter-spacing="-0.5" fill="${t.accent}">${esc(n)}</text>` +
+      `<text x="${x}" y="366" font-size="13" font-weight="600" fill="${t.text}">${esc(label)}</text>` +
+      `<text x="${x}" y="386" font-size="12" fill="${t.muted}">${esc(sub)}</text></g>`);
   });
-  return svg(t, W, H, `Jay Pokale. ${roles.join('. ')}. Nagpur, India.`, o, defs);
+  return svg(t, W, H, `Jay Pokale. ${ROLE.join(', ')}. ${BIO.join(' ')} ` + M.map(([n, l, s]) => `${n} ${l} (${s})`).join(', ') + '.', o, defs);
 }
 
 // ── Link pill: one small clickable image per link ────────────────────────────
 function pill(t, label, i) {
-  const w = Math.round(label.length * 13.5 * ADV + 52), h = 36, D = 6, at = 0.4 + i * 0.45;
+  const w = Math.round(label.length * 13.5 * ADV + 52), h = 36, at = 0.3 + i * 0.12;
   const defs = `<clipPath id="p"><rect x="0.5" y="0.5" width="${w - 1}" height="${h - 1}" rx="18"/></clipPath>`;
   const o = [`<circle cx="18" cy="18" r="4" fill="${t.fill}"/>`,
     `<text x="30" y="23"${mono(13.5)} fill="${t.soft}">${esc(label)}</text>`,
     `<text x="${w - 18}" y="23" font-size="13" fill="${t.accent}">↗</text>`,
-    `<g clip-path="url(#p)"><rect x="-40" y="0" width="26" height="${h}" fill="${t.accent}" opacity="0.18" transform="skewX(-18)">${anim('x', [[at, -40], [at + 0.8, w + 20]], D, { ease: true })}</rect></g>`];
+    `<g clip-path="url(#p)"><rect x="${w + 20}" y="0" width="26" height="${h}" fill="${t.accent}" opacity="0.18" transform="skewX(-18)">${anim('x', [[at, -40], [at + 0.7, w + 20]], { ease: true })}</rect></g>`];
   return svg(t, w, h, label, o, defs, 18);
 }
 
-// ── Stats: five count-up tiles, captions from jaypokale.me ───────────────────
-function stats(t, d) {
-  const W = 880, H = 180, D = 12, N = 5, gap = 8, x0 = 16, tw = (W - 2 * x0 - gap * (N - 1)) / N;
-  const tiles = [
-    [d.chisle, fmt, 'stars on Chisle', 'none purchased'],
-    [d.upstream, fmt, 'PRs merged upstream', d.open ? `+${d.open} in review` : 'and counting'],
-    [2285, fmt, 'LeetCode peak', 'Guardian · top 1%'],
-    [1799, fmt, 'Codeforces', 'one short of 1800'],
-    [20, (n) => `${n}k+`, 'Dare2Solve', 'community I founded'],
-  ];
-  const o = [];
-  tiles.forEach(([n, f, label, sub], i) => {
-    const x = r1(x0 + i * (tw + gap));
-    o.push(`<rect x="${x}" y="16" width="${r1(tw)}" height="148" rx="10" fill="${t.card}" stroke="${t.border}"/>`,
-      `<rect x="${x + 16}" y="16" width="36" height="3" rx="1.5" fill="${t.fill}"/>`);
-    const F = 14;
-    for (let k = 0; k <= F; k++) {
-      const v = Math.round(n * (1 - (1 - k / F) ** 3)), t0 = 0.3 + i * 0.15 + k * 0.09;
-      const pts = k === 0 ? [[0, 1], [t0 + 0.09, 0], [D - 0.3, 0], [D - 0.29, 1]] : k === F ? [[0, 0], [t0, 1], [D - 0.3, 1], [D - 0.29, 0]] : [[0, 0], [t0, 1], [t0 + 0.09, 0]];
-      o.push(`<text x="${x + 16}" y="76" font-size="34" font-weight="800" letter-spacing="-1" fill="${t.accent}" opacity="${k === F ? 1 : 0}">${f(v)}${anim('opacity', pts, D, { discrete: true })}</text>`);
-    }
-    o.push(`<text x="${x + 16}" y="106" font-size="13" font-weight="600" fill="${t.text}">${esc(label)}</text>`,
-      `<text x="${x + 16}" y="130" font-size="12" fill="${t.muted}">${esc(sub)}</text>`);
-  });
-  return svg(t, W, H, `${fmt(d.chisle)} stars on Chisle, ${d.upstream} pull requests merged upstream, LeetCode peak 2285, Codeforces 1799, Dare2Solve community of 20k+.`, o);
-}
-
-// ── Problem J.: the statement, typed in row by row ──────────────────────────
-function problem(t) {
-  const W = 880, H = 300, D = 10;
-  const o = [`<text x="${W / 2}" y="54" font-size="30" font-weight="800" fill="${t.text}" text-anchor="middle">Problem J.</text>`,
-    `<text x="${W / 2}" y="84"${mono(13.5)} fill="${t.muted}" text-anchor="middle">time limit: one lifetime · memory: unbounded · sleep: segfaulted</text>`,
-    `<path d="M140 106H740" stroke="${t.border}"/>`, `<g>${anim('opacity', [[D - 0.5, 1], [D - 0.2, 0]], D)}`];
-  PROBLEM.forEach(([k, v], i) => {
-    const y = 148 + i * 38, at = 0.6 + i * 0.7, w = r1(v.length * 17 * 0.62 + 24);
-    o.push(`<clipPath id="row${i}"><rect x="330" y="${y - 22}" width="${w}" height="32">${anim('width', [[at + 0.15, 0], [at + 0.75, w]], D)}</rect></clipPath>`,
-      `<text x="306" y="${y}" font-size="16" font-weight="700" fill="${i === 3 ? t.green : t.accent}" text-anchor="end" opacity="1">${anim('opacity', [[at, 0], [at + 0.2, 1]], D)}${esc(k)}</text>`,
-      `<text x="330" y="${y}" font-size="17" fill="${i === 3 ? t.text : t.soft}" clip-path="url(#row${i})">${esc(v)}</text>`);
-  });
-  o.push('</g>');
-  return svg(t, W, H, 'Problem J. Time limit: one lifetime. Memory: unbounded. Sleep: segfaulted. ' + PROBLEM.map(([k, v]) => `${k}: ${v}`).join(' '), o);
-}
-
-// ── Verdict: the judge runs the tests, then stamps it ────────────────────────
-function verdict(t) {
-  const W = 880, H = 176, D = 8, tests = [1, 4, 9, 17, 28, 42, 61, 84];
-  const o = [];
-  tests.forEach((n, k) => {
-    const t0 = 0.3 + k * 0.2;
-    o.push(`<text x="44" y="70"${mono(16)} fill="${t.muted}" opacity="0">running on test ${n}…${anim('opacity', [[0, 0], [t0, 1], [t0 + 0.2, 0]], D, { discrete: true })}</text>`);
-  });
-  const at = 0.3 + tests.length * 0.2;
-  o.push(`<g transform="translate(62 62)"><g>${anim('transform', [[at, 0], [at + 0.25, 1.25], [at + 0.45, 1], [D - 0.4, 1], [D - 0.2, 0]], D, { type: 'scale', ease: true })}` +
-      `<circle r="18" fill="${t.green}"/><path d="M-8 0l5.5 5.5L9 -6" fill="none" stroke="${t.bg}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g></g>`,
-    `<text x="94" y="74" font-size="34" font-weight="800" fill="${t.green}" opacity="1">${anim('opacity', [[at, 0], [at + 0.2, 1], [D - 0.4, 1], [D - 0.2, 0]], D)}Verdict: Accepted</text>`,
-    `<text x="44" y="118" font-size="15.5" fill="${t.soft}">Every problem here started unsolved. If yours is interesting enough, it won't stay that way.</text>`,
-    `<text x="44" y="146"${mono(13)} fill="${t.faint}">jay.pokale.35@gmail.com · the only queue I keep at O(1)</text>`);
-  return svg(t, W, H, "Verdict: Accepted. Every problem here started unsolved. If yours is interesting enough, it won't stay that way. jay.pokale.35@gmail.com.", o);
-}
-
-// ── Upstream: merged (solid) and in-review (outlined) PRs per organisation ──
+// ── Upstream: one branch per organisation, one dot per pull request ─────────
 function upstream(t, d) {
   const names = [...new Set(Object.values(ORGS))];
-  const rows = names.map((n) => [n, d.merged[n] || 0, d.review[n] || 0]).filter((r) => r[1] + r[2] > 0).sort((a, b) => b[1] + b[2] - (a[1] + a[2]));
-  const featured = rows.reduce((s, r) => s + r[1], 0), rest = d.upstream - featured;
-  const W = 880, LH = 32, Y0 = 96, H = Y0 + rows.length * LH + (rest > 0 ? 52 : 24), D = 9, X = 200, MAXW = 500, max = Math.max(...rows.map((r) => r[1] + r[2]));
-  const o = [`<text x="28" y="44" font-size="20" font-weight="700" fill="${t.text}">${fmt(d.upstream)} merged PRs in other people's repos` +
-      (d.open ? `<tspan fill="${t.muted}" font-weight="400"> · </tspan><tspan fill="${t.accent}">${d.open} in review</tspan>` : '') + '</text>',
-    `<text x="28" y="70" font-size="13" fill="${t.muted}">live from GitHub ·</text>`,
-    `<rect x="136" y="60" width="18" height="11" rx="3" fill="${t.fill}"/><text x="160" y="70" font-size="13" fill="${t.muted}">merged</text>`,
-    `<rect x="218" y="60" width="18" height="11" rx="3" fill="${t.fill}" fill-opacity="0.15" stroke="${t.fill}" stroke-dasharray="3 2"/><text x="242" y="70" font-size="13" fill="${t.muted}">in review</text>`];
+  const rows = names.map((n) => [n, d.merged[n] || 0, d.review[n] || 0]).filter((r) => r[1] + r[2] > 0).sort((a, b) => b[1] - a[1] || b[2] - a[2]);
+  const W = 880, Y0 = 104, LH = 34, H = Y0 + rows.length * LH + 40, SX = 64, SY = r1(Y0 + ((rows.length - 1) * LH) / 2), LX = 196, DX = 324, DXE = 660;
+  const most = Math.max(...rows.map((r) => r[1] + r[2])), gap = Math.min(13, (DXE - DX) / Math.max(most - 1, 1));
+  const o = [`<text x="32" y="48" font-size="20" font-weight="700" fill="${t.text}">Merged upstream <tspan font-size="13" font-weight="400" fill="${t.muted}">· live from GitHub</tspan></text>`,
+    `<circle cx="${W - 200}" cy="42" r="4.2" fill="${t.fill}"/><text x="${W - 189}" y="46.5" font-size="12.5" fill="${t.muted}">merged</text>`,
+    `<circle cx="${W - 120}" cy="42" r="3.6" fill="${t.bg}" stroke="${t.fill}" stroke-width="1.4"/><text x="${W - 109}" y="46.5" font-size="12.5" fill="${t.muted}">in review</text>`];
   rows.forEach(([name, m, r], i) => {
-    const y = Y0 + i * LH, wm = r1((m / max) * MAXW), wr = r1((r / max) * MAXW), t0 = 0.4 + i * 0.12, t1 = t0 + 0.9;
-    o.push(`<text x="${X - 16}" y="${y + 15}" font-size="14.5" font-weight="${i === 0 ? 700 : 500}" fill="${i === 0 ? t.accent : t.soft}" text-anchor="end">${esc(name)}</text>`);
-    if (m) o.push(`<rect x="${X}" y="${y}" width="${wm}" height="20" rx="5" fill="${t.fill}">${anim('width', [[t0, 0], [t1, wm], [D - 0.5, wm], [D - 0.2, 0]], D, { ease: true })}</rect>`);
-    if (r) o.push(`<rect x="${r1(X + wm + (m ? 3 : 0))}" y="${y + 0.5}" width="${wr}" height="19" rx="5" fill="${t.fill}" fill-opacity="0.15" stroke="${t.fill}" stroke-dasharray="4 3" opacity="1">` +
-      shown(t1, D - 0.3, D, 0.3) + '</rect>');
-    const label = (m ? `${m} merged` : '') + (m && r ? ' · ' : '') + (r ? `${r} in review` : '');
-    o.push(`<text x="${r1(X + wm + wr + (m && r ? 3 : 0) + 12)}" y="${y + 15}" font-size="13.5" fill="${t.soft}">${shown(t1 - 0.1, D - 0.3, D, 0.25)}${esc(label)}</text>`);
+    const y = Y0 + i * LH, tb = 0.25 + i * 0.08;
+    const c = [[SX + 9, SY], [SX + 70, SY], [LX - 70, y], [LX, y]];
+    let len = 0;
+    for (let k = 1, [px, py] = c[0]; k <= 40; k++) {
+      const s = k / 40, u = 1 - s;
+      const qx = u * u * u * c[0][0] + 3 * u * u * s * c[1][0] + 3 * u * s * s * c[2][0] + s * s * s * c[3][0];
+      const qy = u * u * u * c[0][1] + 3 * u * u * s * c[1][1] + 3 * u * s * s * c[2][1] + s * s * s * c[3][1];
+      len += Math.hypot(qx - px, qy - py); px = qx; py = qy;
+    }
+    len = r1(len + 1);
+    o.push(`<path d="M${c[0].join(' ')}C${c.slice(1).map((p) => p.join(' ')).join(' ')}" fill="none" stroke="${t.fill}" stroke-opacity="${i ? 0.45 : 0.9}" stroke-width="${i ? 1.6 : 2.2}" stroke-dasharray="${len}" stroke-dashoffset="0">` +
+      anim('stroke-dashoffset', [[tb, len], [tb + 0.5, 0]], { ease: true }) + '</path>',
+      `<text x="${LX + 12}" y="${y + 5}" font-size="14" font-weight="${i ? 500 : 700}" fill="${i ? t.soft : t.text}">${fadeIn(tb + 0.35, 0.3)}${esc(name)}</text>`);
+    const n = m + r, end = r1(DX + (n - 1) * gap);
+    o.push(`<path d="M${DX - 14} ${y}H${r1(end + 14)}" stroke="${t.track}" stroke-width="1.5" stroke-dasharray="${r1(end - DX + 28)}" stroke-dashoffset="0">${anim('stroke-dashoffset', [[tb + 0.45, r1(end - DX + 28)], [tb + 0.45 + n * 0.028, 0]])}</path>`);
+    for (let j = 0; j < n; j++) {
+      const tj = r2(tb + 0.5 + j * 0.028), cx = r1(DX + j * gap), big = j < m ? 4.2 : 3.6;
+      o.push(j < m
+        ? `<circle cx="${cx}" cy="${y}" r="${big}" fill="${t.fill}">${anim('r', [[tj, 0], [tj + 0.12, 5.6], [tj + 0.22, big]])}</circle>`
+        : `<circle cx="${cx}" cy="${y}" r="${big}" fill="${t.bg}" stroke="${t.fill}" stroke-width="1.4">${anim('r', [[tj, 0], [tj + 0.12, 5], [tj + 0.22, big]])}</circle>`);
+    }
+    o.push(`<text x="${W - 32}" y="${y + 5}" font-size="13" fill="${t.muted}" text-anchor="end">${fadeIn(r2(tb + 0.5 + n * 0.028), 0.3)}` +
+      (m ? `<tspan font-weight="700" fill="${t.text}">${m}</tspan> merged` : '') + (m && r ? ' · ' : '') + (r ? `<tspan fill="${t.accent}">${r}</tspan> in review` : '') + '</text>');
   });
-  if (rest > 0) o.push(`<text x="28" y="${H - 22}" font-size="13" fill="${t.faint}">+ ${rest} more merged across ${d.otherRepos} other repos</text>`);
-  return svg(t, W, H, `${d.upstream} merged pull requests in other people's repositories and ${d.open} in review: ` + rows.map(([n, m, r]) => `${n} ${m} merged${r ? `, ${r} in review` : ''}`).join('; ') + '.', o);
+  o.push(`<g transform="translate(${SX} ${SY})"><g>${anim('transform', [[0.05, 0], [0.3, 1.25], [0.45, 1]], { type: 'scale', ease: true })}` +
+    `<circle r="10" fill="${t.fill}"/><circle r="4" fill="${t.bg}"/></g></g>`,
+    `<text x="${SX}" y="${SY + 30}"${mono(11)} fill="${t.faint}" text-anchor="middle">@${LOGIN}</text>`);
+  const rest = d.upstream - d.featured;
+  if (rest > 0) o.push(`<text x="32" y="${H - 20}" font-size="12.5" fill="${t.faint}">+ ${rest} more merged across ${d.otherRepos} other repos · ${d.upstream} in all</text>`);
+  return svg(t, W, H, `Pull requests merged upstream, live from GitHub: ` + rows.map(([n, m, r]) => `${n} ${m} merged${r ? `, ${r} in review` : ''}`).join('; ') + (rest > 0 ? `; ${rest} more across ${d.otherRepos} other repos.` : '.'), o);
 }
 
-// ── About: a typed `whoami --verbose` ────────────────────────────────────────
-function win(t, x, y, w, h, title) {
-  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${t.card}" stroke="${t.border}"/>` +
-    `<path d="M${x} ${y + 32}H${x + w}" stroke="${t.border}"/>` +
-    ['#ff5f57', '#febc2e', '#28c840'].map((c, i) => `<circle cx="${x + 18 + i * 16}" cy="${y + 16}" r="5" fill="${c}"/>`).join('') +
-    `<text x="${x + w / 2}" y="${y + 20.5}"${mono(12)} fill="${t.muted}" text-anchor="middle">${esc(title)}</text>`;
-}
-function about(t) {
-  const W = 880, FS = 14, LH = 27, X = 40, Y0 = 84, D = 11, KEY = 11, H = Y0 + ABOUT.length * LH + 44;
-  const cmd = 'whoami --verbose', cw = r1((cmd.length + 2) * FS * ADV);
-  const o = [win(t, 16, 16, W - 32, H - 32, '~ — zsh'),
-    `<clipPath id="typed"><rect x="${X}" y="${Y0 - FS}" width="${cw}" height="${FS * 1.5}">${anim('width', [[0.4, 0], [1.3, cw]], D)}</rect></clipPath>`,
-    `<g>${anim('opacity', [[D - 0.5, 1], [D - 0.2, 0]], D)}`,
-    `<text x="${X}" y="${Y0}"${mono(FS)} clip-path="url(#typed)"><tspan fill="${t.faint}">$ </tspan><tspan fill="${t.text}">${esc(cmd)}</tspan></text>`,
-    `<rect x="${r1(X + cw)}" y="${Y0 - FS + 2}" width="${r1(FS * ADV)}" height="${FS + 3}" fill="${t.soft}" opacity="0">${anim('x', [[0.4, X], [1.3, r1(X + cw)]], D)}${anim('opacity', [[0.39, 0], [0.4, 0.8], [1.6, 0.8], [1.61, 0]], D)}</rect>`];
-  ABOUT.forEach(([k, v], i) => {
-    const y = Y0 + (i + 1) * LH, at = 1.7 + i * 0.28;
-    o.push(`<text x="${X}" y="${y}"${mono(FS)} opacity="1">${anim('opacity', [[at, 0], [at + 0.2, 1]], D)}` +
-      `<tspan fill="${t.accent}">${esc(k.padEnd(KEY))}</tspan><tspan fill="${t.soft}">${esc(v)}</tspan></text>`);
+// ── Chisle: the project and its published results ───────────────────────────
+function chisle(t, d) {
+  const W = 880, H = 232, BX = 476, BW = W - 32 - BX;
+  const o = [`<text x="32" y="78"${mono(42)} font-weight="700" letter-spacing="-1" fill="${t.text}">chisle</text>`,
+    `<rect x="${r1(32 + 6 * 42 * ADV - 5 + 8)}" y="46" width="16" height="38" rx="2" fill="${t.fill}"/>`,
+    `<text x="32" y="116" font-size="15" fill="${t.soft}">Makes AI coding agents talk less, build less,</text>`,
+    `<text x="32" y="138" font-size="15" fill="${t.soft}">read less and say more.</text>`,
+    `<text x="32" y="176"${mono(12.5)} fill="${t.muted}"><tspan fill="${t.accent}"><tspan font-family="${SANS}">★</tspan> ${fmt(d.chisle)}</tspan> stars  ·  npx chisle  ·  13 agents  ·  MIT</text>`,
+    `<text x="32" y="204" font-size="12" fill="${t.faint}">The only tool in its class that publishes the benchmarks it loses.</text>`,
+    `<text x="${BX}" y="40" font-size="11" font-weight="700" letter-spacing="1.5" fill="${t.faint}">PUBLISHED RESULTS</text>`];
+  CHISLE.forEach(([label, keep, value], i) => {
+    const y = 74 + i * 52, kw = r1(BW * keep), tc = 0.7 + i * 0.35, whole = keep === 1;
+    o.push(`<text x="${BX}" y="${y}" font-size="13" fill="${t.soft}">${esc(label)}</text>`,
+      `<rect x="${BX}" y="${y + 10}" width="${BW}" height="10" rx="5" fill="${t.track}"/>`);
+    if (whole) o.push(`<rect x="${BX}" y="${y + 10}" width="${BW}" height="10" rx="5" fill="${t.green}">${anim('width', [[tc, 0], [tc + 0.7, BW]], { ease: true })}</rect>`);
+    else {
+      o.push(`<rect x="${BX}" y="${y + 10}" width="${kw}" height="10" rx="5" fill="${t.fill}"/>`,
+        // The part chiselled off: whole at first, then knocked away.
+        `<g opacity="0">${anim('opacity', [[0, 1], [tc, 1], [tc + 0.45, 0]])}<g>${anim('transform', [[tc, '0 0'], [tc + 0.5, '6 16']], { type: 'translate', spline: FALL })}` +
+          `<rect x="${r1(BX + kw + 1)}" y="${y + 10}" width="${r1(BW - kw - 1)}" height="10" rx="5" fill="${t.fill}"/></g></g>`,
+        `<rect x="${r1(BX + kw - 1)}" y="${y + 4}" width="2" height="22" rx="1" fill="${t.accent}" opacity="0">${anim('opacity', [[tc - 0.12, 0], [tc - 0.05, 1], [tc + 0.25, 0]])}</rect>`);
+    }
+    o.push(`<text x="${W - 32}" y="${y}" font-size="13" font-weight="700" fill="${whole ? t.green : t.accent}" text-anchor="end">${fadeIn(tc + 0.2)}${esc(value)}</text>`);
   });
-  o.push('</g>');
-  return svg(t, W, H, 'whoami: ' + ABOUT.map(([k, v]) => (k ? `${k}: ` : '') + v).join('; ') + '.', o);
+  return svg(t, W, H, `Chisle: makes AI coding agents talk less, build less, read less and say more. ${fmt(d.chisle)} stars, 13 agents, MIT. Answers 45% shorter, oversized tool output cut 48%, 156 of 156 graded answers still correct.`, o);
 }
 
-// ── Contributions: the last year, filled in week by week, then chiselled ─────
-function contrib(t, d) {
-  const W = 880, H = 232, D = 9, C = 11, G = 3, weeks = d.weeks, X0 = Math.round((W - weeks.length * (C + G)) / 2), Y0 = 86;
-  const counts = weeks.flatMap((w) => w.map((x) => x.n)).filter((n) => n > 0).sort((a, b) => a - b);
-  const q = (p) => counts[Math.floor(p * (counts.length - 1))] || 1;
-  const lvl = (n) => (n === 0 ? 0 : n <= q(0.25) ? 1 : n <= q(0.5) ? 2 : n <= q(0.75) ? 3 : 4);
-  const op = [0, 0.3, 0.52, 0.76, 1];
-  const o = [`<text x="${X0}" y="44" font-size="18" font-weight="700" fill="${t.text}">${fmt(d.contributions)} contributions <tspan fill="${t.muted}" font-weight="400">in the last year</tspan></text>`];
-  let last = '';
-  weeks.forEach((w, i) => {
-    const m = new Date(w[0].date + 'T00:00:00Z').toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
-    if (m !== last && i < weeks.length - 2) { o.push(`<text x="${X0 + i * (C + G)}" y="${Y0 - 10}" font-size="11" fill="${t.faint}">${m}</text>`); last = m; }
-    const at = 0.2 + i * 0.035;
-    o.push(`<g opacity="1">${anim('opacity', [[at, 0], [at + 0.25, 1], [D - 0.4, 1], [D - 0.15, 0]], D)}` +
-      w.map((x) => `<rect x="${X0 + i * (C + G)}" y="${Y0 + x.day * (C + G)}" width="${C}" height="${C}" rx="2.5" fill="${lvl(x.n) ? t.fill : t.track}"${lvl(x.n) ? ` fill-opacity="${op[lvl(x.n)]}"` : ''}/>`).join('') + '</g>');
+// ── Research: the three theses ───────────────────────────────────────────────
+function research(t) {
+  const W = 880, Y0 = 100, LH = 66, H = Y0 + RESEARCH.length * LH - 10;
+  const o = [`<text x="32" y="48" font-size="20" font-weight="700" fill="${t.text}">Research <tspan font-size="13" font-weight="400" fill="${t.muted}">· IIT Hyderabad · three theses in progress</tspan></text>`];
+  RESEARCH.forEach(([title, line, tag], i) => {
+    const y = Y0 + i * LH, t0 = 0.2 + i * 0.16;
+    o.push(`<rect x="32" y="${y - 17}" width="3" height="44" rx="1.5" fill="${t.fill}">${anim('height', [[t0, 0], [t0 + 0.45, 44]], { ease: true })}</rect>`,
+      `<g>${fadeIn(t0 + 0.1)}<g>${riseIn(t0 + 0.1, 6)}` +
+        `<text x="50" y="${y}" font-size="16" font-weight="700" fill="${t.text}">“${esc(title)}”</text>` +
+        `<text x="50" y="${y + 22}" font-size="13.5" fill="${t.soft}">${esc(line)}</text></g></g>`);
+    if (tag) o.push(`<text x="${W - 32}" y="${y}"${mono(11.5)} fill="${t.faint}" text-anchor="end">${fadeIn(t0 + 0.3)}${esc(tag)}</text>`);
   });
-  const gx = X0 + weeks.length * (C + G);
-  o.push(`<rect x="${X0}" y="${Y0 - 4}" width="4" height="${7 * (C + G) + 4}" rx="2" fill="${t.accent}" opacity="0">` +
-    anim('x', [[2.4, X0 - 6], [4.2, gx]], D) + anim('opacity', [[2.39, 0], [2.4, 0.9], [4.2, 0.9], [4.21, 0]], D) + '</rect>');
-  const ly = Y0 + 7 * (C + G) + 26;
-  o.push(`<text x="${gx - 5 * (C + 4) - 44}" y="${ly + 9}" font-size="11" fill="${t.faint}" text-anchor="end">less</text>`,
-    ...op.map((v, k) => `<rect x="${gx - (5 - k) * (C + 4) - 36}" y="${ly}" width="${C}" height="${C}" rx="2.5" fill="${k ? t.fill : t.track}"${k ? ` fill-opacity="${v}"` : ''}/>`),
-    `<text x="${gx - 30}" y="${ly + 9}" font-size="11" fill="${t.faint}">more</text>`);
-  return svg(t, W, H, `${d.contributions} GitHub contributions in the last year.`, o);
+  // Attack success on the semantic cache, before and after the fix, counted down.
+  const y = Y0 + LH, FS = 20, C = FS * ADV, x0 = r1(W - 32 - 9 * C), tc = 0.9, steps = [63, 48, 34, 22, 12, 5, 1, 0];
+  o.push(`<text x="${W - 32}" y="${y}"${mono(11.5)} fill="${t.faint}" text-anchor="end">attack success</text>`,
+    `<text x="${x0}" y="${y + 25}"${mono(FS)} fill="${t.muted}">63%</text>`,
+    `<path d="M${x0 - 2} ${y + 18}H${r1(x0 + 3 * C + 2)}" stroke="${t.muted}" stroke-width="1.6" stroke-dasharray="${r1(3 * C + 4)}" stroke-dashoffset="0">${anim('stroke-dashoffset', [[tc + steps.length * 0.09, r1(3 * C + 4)], [tc + steps.length * 0.09 + 0.25, 0]])}</path>`,
+    `<text x="${r1(x0 + 4 * C)}" y="${y + 25}"${mono(FS)} fill="${t.faint}">→</text>`);
+  steps.forEach((v, k) => {
+    const tk = r2(tc + k * 0.09), last = k === steps.length - 1;
+    const pts = k === 0 ? [[0, 1], [tk + 0.09, 0]] : last ? [[0, 0], [tk, 1]] : [[0, 0], [tk, 1], [tk + 0.09, 0]];
+    o.push(`<text x="${r1(x0 + 6 * C)}" y="${y + 25}"${mono(FS)} font-weight="700" fill="${t.green}" opacity="${last ? 1 : 0}">${anim('opacity', pts, { discrete: true })}${v}%</text>`);
+  });
+  return svg(t, W, H, 'Research at IIT Hyderabad, three theses in progress: ' + RESEARCH.map(([a, b]) => `"${a}": ${b}`).join(' ') + ' Attack success on the semantic cache: 63% to 0%.', o);
 }
 
-// ── Toolbox: labelled rows of chips, lit one after another ───────────────────
+// ── Toolbox: labelled rows of chips ─────────────────────────────────────────
 function stack(t) {
-  const W = 880, FS = 13, GAP = 8, X = 170, D = 6.5, H = 64 + STACK.length * 46;
-  const o = [`<text x="28" y="36" font-size="12" font-weight="700" letter-spacing="2" fill="${t.muted}">TOOLBOX <tspan font-weight="400" letter-spacing="0" fill="${t.faint}">· used in anger, sorted by era</tspan></text>`];
+  const W = 880, FS = 13, GAP = 8, X = 170, H = 70 + STACK.length * 44;
+  const o = [`<text x="32" y="40" font-size="12" font-weight="700" letter-spacing="2" fill="${t.muted}">TOOLBOX</text>`];
   let k = 0;
   STACK.forEach(([label, names], r) => {
-    const y = 56 + r * 46;
-    o.push(`<text x="28" y="${y + 21}"${mono(12.5)} fill="${t.faint}">${esc(label)}</text>`);
+    const y = 58 + r * 44;
+    o.push(`<text x="32" y="${y + 21}"${mono(12.5)} fill="${t.faint}">${esc(label)}</text>`);
     let x = X;
     names.forEach((n) => {
-      const w = r1(n.length * FS * ADV + 26), at = 0.3 + k++ * 0.28;
-      o.push(`<rect x="${r1(x)}" y="${y}" width="${w}" height="32" rx="16" fill="${t.card}" stroke="${t.border}"/>` +
-        `<rect x="${r1(x)}" y="${y}" width="${w}" height="32" rx="16" fill="${t.fill}" fill-opacity="0.12" stroke="${t.fill}" opacity="0">${anim('opacity', [[at, 0], [at + 0.2, 1], [at + 0.7, 1], [at + 1.1, 0]], D)}</rect>` +
-        `<text x="${r1(x + w / 2)}" y="${y + 20.5}"${mono(FS)} fill="${t.soft}" text-anchor="middle">${esc(n)}</text>`);
+      const w = r1(n.length * FS * ADV + 26);
+      o.push(`<g>${fadeIn(r2(0.15 + k++ * 0.05), 0.35)}<rect x="${r1(x)}" y="${y}" width="${w}" height="32" rx="16" fill="${t.card}" stroke="${t.border}"/>` +
+        `<text x="${r1(x + w / 2)}" y="${y + 20.5}"${mono(FS)} fill="${t.soft}" text-anchor="middle">${esc(n)}</text></g>`);
       x += w + GAP;
     });
   });
   return svg(t, W, H, 'Toolbox. ' + STACK.map(([l, n]) => `${l}: ${n.join(', ')}`).join('. ') + '.', o);
 }
 
-// ── Lift: the sign-off ───────────────────────────────────────────────────────
-function lift(t) {
-  const W = 880, H = 104;
-  const bar = `<g>${anim('transform', [[0, '0 6'], [0.7, '0 -10'], [1.3, '0 -10'], [2.0, '0 6'], [2.8, '0 6']], 2.8, { type: 'translate', ease: true })}` +
-    `<rect x="38" y="49" width="104" height="5" rx="2.5" fill="${t.soft}"/>` +
-    [[46, 30], [56, 22], [124, 22], [132, 30]].map(([x, h]) => `<rect x="${x - 4}" y="${51.5 - h / 2}" width="8" height="${h}" rx="2" fill="${t.fill}"/>`).join('') + '</g>';
-  const o = [bar, `<text x="170" y="58" font-size="17" fill="${t.soft}">Powerlifter. <tspan fill="${t.muted}">The only PRs I set without a code review.</tspan></text>`];
-  return svg(t, W, H, 'Powerlifter. The only PRs I set without a code review.', o);
+// ── Closing: the invitation ─────────────────────────────────────────────────
+function closing(t) {
+  const W = 880, H = 152;
+  const o = [`<text x="32" y="60" font-size="22" font-weight="800" letter-spacing="-0.3" fill="${t.text}">Every problem here started unsolved.</text>`,
+    `<path d="M32 78H96" stroke="${t.fill}" stroke-width="3" stroke-linecap="round" stroke-dasharray="64" stroke-dashoffset="0">${anim('stroke-dashoffset', [[0.3, 64], [0.9, 0]], { ease: true })}</path>`,
+    `<text x="32" y="108" font-size="16" fill="${t.soft}">If yours is interesting enough, it won't stay that way.</text>`,
+    `<text x="32" y="134"${mono(13)} fill="${t.muted}"><tspan fill="${t.accent}">jay.pokale.35@gmail.com</tspan>  ·  jaypokale.me</text>`];
+  return svg(t, W, H, "Every problem here started unsolved. If yours is interesting enough, it won't stay that way. jay.pokale.35@gmail.com, jaypokale.me.", o);
 }
-
-const LINE = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="4" viewBox="0 0 1200 4" preserveAspectRatio="none" role="img" aria-label="divider">
-<defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#d78a3c" stop-opacity="0"/><stop offset="0.7" stop-color="#f0a85a"/><stop offset="1" stop-color="#fff3e0"/></linearGradient></defs>
-<rect width="1200" height="4" rx="2" fill="#d78a3c" opacity="0.18"/>
-<rect width="260" height="4" rx="2" fill="url(#g)"><animate attributeName="x" from="-260" to="1200" dur="3.2s" repeatCount="indefinite"/></rect>
-</svg>
-`;
 
 // ── Data (GitHub API only) ───────────────────────────────────────────────────
 async function api(url, init = {}) {
@@ -311,14 +310,21 @@ async function api(url, init = {}) {
   if (!res.ok) throw new Error(`${res.status} from ${url}`);
   return res;
 }
+// Every pull request matching the search, past the first page of 100.
+async function prs(state) {
+  const q = encodeURIComponent(`is:pr ${state} author:${LOGIN} -user:${LOGIN}`), items = [];
+  for (let page = 1; page <= 10; page++) {
+    const r = await (await api(`https://api.github.com/search/issues?per_page=100&page=${page}&q=${q}`)).json();
+    items.push(...r.items);
+    if (items.length >= r.total_count || r.items.length < 100) return { total: r.total_count, items };
+  }
+  throw new Error(`more than 1000 ${state} pull requests`);
+}
 async function load() {
-  const q = `query($l:String!){user(login:$l){avatarUrl(size:320)
-    contributionsCollection{contributionCalendar{totalContributions weeks{contributionDays{date weekday contributionCount}}}}
-    repository(name:"Chisle"){stargazerCount}}}`;
+  const q = 'query($l:String!){user(login:$l){avatarUrl(size:320) repository(name:"Chisle"){stargazerCount}}}';
   const g = await (await api('https://api.github.com/graphql', { method: 'POST', body: JSON.stringify({ query: q, variables: { l: LOGIN } }) })).json();
   if (g.errors) throw new Error(g.errors[0].message);
-  const u = g.data.user, cal = u.contributionsCollection.contributionCalendar;
-  const prs = async (state) => (await api(`https://api.github.com/search/issues?per_page=100&q=${encodeURIComponent(`is:pr ${state} author:${LOGIN} -user:${LOGIN}`)}`)).json();
+  const u = g.data.user;
   const [done, open] = await Promise.all([prs('is:merged'), prs('is:open')]);
   const tally = (items) => {
     const by = {}, other = new Set();
@@ -332,19 +338,17 @@ async function load() {
   const img = await api(u.avatarUrl);
   const avatar = `data:${img.headers.get('content-type') || 'image/png'};base64,${Buffer.from(await img.arrayBuffer()).toString('base64')}`;
   return {
-    avatar, chisle: u.repository.stargazerCount, upstream: done.total_count, open: open.total_count, merged, review, otherRepos: other.size,
-    clickhouse: merged.ClickHouse || 0, contributions: cal.totalContributions,
-    weeks: cal.weeks.map((w) => w.contributionDays.map((x) => ({ date: x.date, day: x.weekday, n: x.contributionCount }))),
+    avatar, chisle: u.repository.stargazerCount, upstream: done.total, open: open.total, merged, review, otherRepos: other.size,
+    featured: Object.values(merged).reduce((s, n) => s + n, 0),
   };
 }
 
 load().then((d) => {
   const out = path.resolve(process.argv[2] || 'out');
   fs.mkdirSync(out, { recursive: true });
-  fs.writeFileSync(path.join(out, 'line.svg'), LINE);
   for (const [theme, t] of Object.entries(THEMES)) {
-    for (const [name, build] of Object.entries({ hero, problem, stats, upstream, about, contrib, stack, lift, verdict })) fs.writeFileSync(path.join(out, `${name}-${theme}.svg`), build(t, d));
+    for (const [name, build] of Object.entries({ hero, upstream, chisle, research, stack, closing })) fs.writeFileSync(path.join(out, `${name}-${theme}.svg`), build(t, d));
     LINKS.forEach(([id, label], i) => fs.writeFileSync(path.join(out, `link-${id}-${theme}.svg`), pill(t, label, i)));
   }
-  console.log(`wrote ${out}: Chisle ${d.chisle} stars, ${d.upstream} upstream PRs, ${d.contributions} contributions`);
+  console.log(`wrote ${out}: Chisle ${d.chisle} stars, ${d.featured} of ${d.upstream} merged PRs in featured orgs, ${d.open} open`);
 }).catch((e) => { console.error(e.message); process.exit(1); });

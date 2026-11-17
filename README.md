@@ -1,8 +1,8 @@
 <p align="center">
-  <picture>
+  <a href="https://jaypokale.me"><picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/hero-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/hero-light.svg" width="880" alt="Jay Pokale: researcher at IIT Hyderabad, creator of Chisle, LeetCode Guardian and Codeforces Expert, founder of Dare2Solve. Nagpur, India.">
-  </picture>
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/hero-light.svg" width="880" alt="Jay Pokale. Researcher at IIT Hyderabad, creator of Chisle, Nagpur, India. Database internals, retrieval security and coding agents: fixed upstream, proved on paper, starred on GitHub. Live counts of merged upstream PRs and Chisle stars; LeetCode peak 2,285 (Guardian); Codeforces 1,799 (Expert); Dare2Solve, 20k+ members.">
+  </picture></a>
 </p>
 
 <p align="center">
@@ -17,49 +17,24 @@
 </p>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/problem-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/problem-light.svg" width="880" alt="Problem J. Time limit: one lifetime. Memory: unbounded. Sleep: segfaulted. Input: an unreasonable problem. Output: a shipped, verified system. Scoring: partial credit not accepted. Note: it is guaranteed that a solution exists.">
-  </picture>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/stats-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/stats-light.svg" width="880" alt="Live numbers: stars on Chisle and pull requests merged upstream; LeetCode peak 2285, Codeforces 1799, Dare2Solve community of 20k+.">
-  </picture>
-</p>
-
-<p align="center"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/line.svg" width="100%" height="4" alt=""></p>
-
-<p align="center">
-  <a href="https://github.com/JayPokale/Chisle">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/Chisle/main/assets/readme/banner-dark.svg">
-      <img src="https://raw.githubusercontent.com/JayPokale/Chisle/main/assets/readme/banner-light.svg" width="880" alt="Chisle: fewer tokens in, fewer tokens out, same answers.">
-    </picture>
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/pulls?q=is%3Apr+author%3AJayPokale+-user%3AJayPokale"><picture>
+  <a href="https://github.com/search?q=is%3Apr+is%3Amerged+author%3AJayPokale+org%3AClickHouse+org%3Ainterledger+org%3Alancedb+org%3Alance-format+org%3Aballerina-platform+org%3Atemporalio+org%3Apydantic+org%3AWICG&type=pullrequests"><picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/upstream-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/upstream-light.svg" width="880" alt="Merged and in-review pull requests in other people's repositories, by organisation.">
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/upstream-light.svg" width="880" alt="Pull requests merged upstream, live from GitHub: one branch per organisation (ClickHouse, Interledger, LanceDB, Ballerina, Temporal, Pydantic, W3C WICG), one dot per pull request, merged or in review.">
   </picture></a>
 </p>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/about-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/about-light.svg" width="880" alt="whoami: building Chisle; research on certified defenses for GraphRAG, semantic-cache integrity and multi-timescale continual learning; upstream at ClickHouse, LanceDB, Interledger, Temporal and Ballerina; LeetCode Guardian and Codeforces Expert; founded Dare2Solve.">
-  </picture>
+  <a href="https://github.com/JayPokale/Chisle"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/chisle-dark.svg">
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/chisle-light.svg" width="880" alt="Chisle: makes AI coding agents talk less, build less, read less and say more. Answers 45% shorter, oversized tool output cut 48%, 156 of 156 graded answers still correct.">
+  </picture></a>
 </p>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/contrib-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/contrib-light.svg" width="880" alt="GitHub contributions in the last year.">
-  </picture>
+  <a href="https://jaypokale.me"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/research-dark.svg">
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/research-light.svg" width="880" alt="Research at IIT Hyderabad: "Corroboration Is All You Can Certify" (GraphRAG, certified robustness); "Cache Me If You Can" (semantic-cache attack success from 63% to 0%); "Some Memories Take Time" (continual learning).">
+  </picture></a>
 </p>
 
 <p align="center">
@@ -69,18 +44,9 @@
   </picture>
 </p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/line.svg" width="100%" height="4" alt=""></p>
-
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/lift-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/lift-light.svg" width="880" alt="Powerlifter. The only PRs I set without a code review.">
-  </picture>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/verdict-dark.svg">
-    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/verdict-light.svg" width="880" alt="Verdict: Accepted. Every problem here started unsolved. If yours is interesting enough, it won't stay that way.">
-  </picture>
+  <a href="mailto:jay.pokale.35@gmail.com"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/closing-dark.svg">
+    <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/closing-light.svg" width="880" alt="Every problem here started unsolved. If yours is interesting enough, it won't stay that way. jay.pokale.35@gmail.com">
+  </picture></a>
 </p>
