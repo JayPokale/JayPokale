@@ -86,7 +86,7 @@ const diff = (t, x, y, add, del, fs = 12) => `<text x="${x}" y="${y}" font-famil
 
 function bento(t, d) {
   const W = 880, G = 12, LW = 548, RX = LW + G, RW = W - RX;
-  const H1 = 236, Y2 = H1 + G, H2 = 330, Y3 = Y2 + H2 + G, H3 = 196, H = Y3 + H3;
+  const H1 = 236, YC = H1 + G, HC = 172, Y2 = YC + HC + G, H2 = 330, Y3 = Y2 + H2 + G, H3 = 196, H = Y3 + H3;
   const o = [];
   const defs = [
     `<radialGradient id="glowA" cx="0.92" cy="0" r="0.65"><stop offset="0" stop-color="${t.a1}" stop-opacity="${t.glow}"/><stop offset="1" stop-color="${t.a1}" stop-opacity="0"/></radialGradient>`,
@@ -131,6 +131,28 @@ function bento(t, d) {
     o.push(appear(0.05, c.join(''), 6));
   }
 
+  // ── Chisle: the project I wrote, and what it measures.
+  {
+    const y = YC, c = [cardRect(t, 0, y, W, HC), eyebrow(t, 24, y + 34, 'CREATED · CHISLE'),
+      `<text x="${W - 24}" y="${y + 34}" font-size="12.5" fill="${t.muted}" text-anchor="end">github.com/JayPokale/Chisle ↗</text>`,
+      `<text x="22" y="${y + 84}" font-family="${MONO}" font-size="38" font-weight="700" letter-spacing="-1" fill="${t.text}">chisle</text>`,
+      `<rect x="${r1(22 + 6 * 38 * 0.6 - 2)}" y="${y + 55}" width="14" height="34" rx="2" fill="url(#ink)"/>`,
+      `<text x="210" y="${y + 66}" font-size="15" fill="${t.text}">Makes AI coding agents talk less, build less, read less and say more.</text>`,
+      `<text x="210" y="${y + 87}" font-size="12.5" fill="${t.muted}">The only tool in its class that publishes the benchmarks it loses.</text>`,
+      `<path d="M24 ${y + 108}H${W - 24}" stroke="${t.rule}"/>`];
+    const stats = [
+      [fmt(d.chisle.stars), 'GitHub stars', t.text], [fmt(d.chisle.downloads), 'npm downloads / month', t.text], ['13', 'agents supported', t.text],
+      ['−45%', 'answer length', t.green], ['−48%', 'oversized tool output', t.green], ['156/156', 'answers still correct', t.green],
+    ];
+    const sw = (W - 48) / stats.length;
+    stats.forEach(([v, label, fill], i) => {
+      const x = r1(24 + i * sw);
+      if (i) c.push(`<path d="M${r1(x - 12)} ${y + 124}V${y + 156}" stroke="${t.rule}"/>`);
+      c.push(appear(r2(0.5 + i * 0.06), `<text x="${x}" y="${y + 140}" font-size="19" font-weight="700" fill="${fill}">${esc(v)}</text><text x="${x}" y="${y + 158}" font-size="11.5" fill="${t.muted}">${esc(label)}</text>`, 4));
+    });
+    o.push(appear(0.15, c.join('')));
+  }
+
   // ── Latest pull requests, with their size.
   {
     const y = Y2, c = [cardRect(t, 0, y, LW, H2), eyebrow(t, 24, y + 34, 'LATEST PULL REQUESTS'),
@@ -147,7 +169,7 @@ function bento(t, d) {
       if (i < d.rows.length - 1) row.push(`<path d="M24 ${top + 50}H${LW - 24}" stroke="${t.rule}"/>`);
       c.push(appear(r2(0.5 + i * 0.07), row.join(''), 6));
     });
-    o.push(appear(0.2, c.join('')));
+    o.push(appear(0.26, c.join('')));
   }
 
   // ── By project: merged count, against each project's size.
@@ -163,7 +185,7 @@ function bento(t, d) {
         `<rect x="${BX}" y="${top + 23}" width="${BW}" height="5" rx="2.5" fill="${t.track}"/>`,
         `<rect x="${BX}" y="${top + 23}" width="${w}" height="5" rx="2.5" fill="url(#bar)">${anim('width', [[t0, 0], [r2(t0 + 0.7), w]], { ease: true })}</rect>`);
     });
-    o.push(appear(0.28, c.join('')));
+    o.push(appear(0.32, c.join('')));
   }
 
   // ── Research.
@@ -262,12 +284,15 @@ async function load() {
     const img = await api(`${u.avatar_url}${u.avatar_url.includes('?') ? '&' : '?'}s=64`, true);
     logos[name] = `data:${img.headers.get('content-type') || 'image/png'};base64,${Buffer.from(await img.arrayBuffer()).toString('base64')}`;
   });
+  const repo = await api(`https://api.github.com/repos/${LOGIN}/Chisle`);
+  const npm = await (await fetch('https://api.npmjs.org/downloads/point/last-month/chisle')).json();
   const now = new Date(), since = now - RECENT_DAYS * 864e5;
   return {
     rows, byOrg, logos, merged: m.length, open: r.length, repos: repos.length,
     stars: Object.values(stars).reduce((s, n) => s + n, 0),
     add: m.reduce((s, p) => s + p.add, 0), del: m.reduce((s, p) => s + p.del, 0),
     recent: m.filter((p) => p.when >= since).length,
+    chisle: { stars: repo.stargazers_count, downloads: npm.downloads || 0 },
     stamp: `${day(now)} ${now.getUTCFullYear()}, ${now.toISOString().slice(11, 16)} UTC`,
   };
 }
