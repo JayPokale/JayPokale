@@ -1,16 +1,31 @@
 <p align="center">
-  <a href="https://github.com/search?q=is%3Apr+author%3AJayPokale+org%3AClickHouse+org%3Ainterledger+org%3Alancedb+org%3Alance-format+org%3Aballerina-platform+org%3Atemporalio+org%3Apydantic+org%3AWICG&type=pullrequests&s=updated&o=desc">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/bento-dark.svg">
-      <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/bento-light.svg" width="880" alt="Open source, live from GitHub: pull requests merged upstream into ClickHouse, Interledger, LanceDB, Ballerina, Pydantic, Temporal and W3C, with lines changed, repositories, recent pace and what is in review; the latest pull requests with their size and status; merged count per project next to its GitHub stars. Chisle, the coding-agent tool I created: live GitHub stars and npm downloads, answers 45% shorter, oversized tool output cut 48%, 156 of 156 answers still correct. Research: three theses in progress. LeetCode Guardian (peak 2,285), Codeforces Expert (1,799), founder of Dare2Solve (20k+ members).">
-    </picture>
-  </a>
+  <a href="https://github.com/JayPokale/Chisle"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/chisle-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/chisle-light.svg" width="880" alt="Chisle, my project: makes AI coding agents talk less, build less, read less and say more. Live GitHub stars and npm downloads; fewer output tokens than caveman, ponytail and no ruleset on the same prompt; answers 45% shorter, oversized tool output cut 48%, 156 of 156 answers still correct."></picture></a>
 </p>
 
 <p align="center">
-  <a href="https://jaypokale.me">Research</a> ·
-  <a href="https://leetcode.com/u/jaypokale">LeetCode</a> ·
-  <a href="https://codeforces.com/profile/rdx_panther">Codeforces</a> ·
-  <a href="https://dare2solve.jaypokale.me">Dare2Solve</a> ·
-  <a href="https://dev.to/jaypokale">dev.to</a>
+  <a href="https://github.com/JayPokale"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-github-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-github-light.svg" height="40" alt="Follow @JayPokale on GitHub"></picture></a>
+  <a href="https://www.linkedin.com/in/JayPokale"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-linkedin-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-linkedin-light.svg" height="40" alt="LinkedIn"></picture></a>
+  <a href="https://x.com/JayPokale35"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-x-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-x-light.svg" height="40" alt="X"></picture></a>
+  <a href="https://jaypokale.me"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-site-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-site-light.svg" height="40" alt="jaypokale.me"></picture></a>
+  <a href="https://dev.to/jaypokale"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-devto-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-devto-light.svg" height="40" alt="dev.to"></picture></a>
+  <a href="mailto:jay.pokale.35@gmail.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-email-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/follow-email-light.svg" height="40" alt="Email"></picture></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/search?q=is%3Apr+is%3Amerged+author%3AJayPokale+org%3AClickHouse+org%3Ainterledger+org%3Alancedb+org%3Alance-format+org%3Aballerina-platform+org%3Atemporalio+org%3Apydantic+org%3AWICG&type=pullrequests"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/oss-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/oss-light.svg" width="880" alt="Open source, live from GitHub: pull requests merged upstream, the combined stars of those projects, lines changed, repositories, pace over the last 90 days and what is in review."></picture></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/search?q=is%3Apr+author%3AJayPokale+org%3AClickHouse+org%3Ainterledger+org%3Alancedb+org%3Alance-format+org%3Aballerina-platform+org%3Atemporalio+org%3Apydantic+org%3AWICG&type=pullrequests&s=updated&o=desc"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/prs-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/prs-light.svg" width="61.5%" alt="Latest pull requests upstream, with their size and status."></picture></a>
+  <a href="https://github.com/search?q=is%3Apr+is%3Amerged+author%3AJayPokale+org%3AClickHouse+org%3Ainterledger+org%3Alancedb+org%3Alance-format+org%3Aballerina-platform+org%3Atemporalio+org%3Apydantic+org%3AWICG&type=pullrequests"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/orgs-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/orgs-light.svg" width="36.5%" alt="Merged pull requests per project, beside each project's GitHub stars."></picture></a>
+</p>
+
+<p align="center">
+  <a href="https://jaypokale.me"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/research-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/research-light.svg" width="880" alt="Research: three theses in progress on GraphRAG certification, semantic-cache attacks (attack success 63% to 0%) and continual learning."></picture></a>
+</p>
+
+<p align="center">
+  <a href="https://leetcode.com/u/jaypokale"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/leetcode-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/leetcode-light.svg" width="32.4%" alt="LeetCode: peak rating 2,285, Guardian, top 1%."></picture></a>
+  <a href="https://codeforces.com/profile/rdx_panther"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/codeforces-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/codeforces-light.svg" width="32.4%" alt="Codeforces: rating 1,799, Expert."></picture></a>
+  <a href="https://dare2solve.jaypokale.me"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/dare2solve-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/dare2solve-light.svg" width="32.4%" alt="Dare2Solve: 20k+ members, founder."></picture></a>
 </p>

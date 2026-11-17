@@ -25,10 +25,12 @@ const RESEARCH = [
   ['Some Memories Take Time', "Zipf's law fixes how many learning timescales a model needs: about nine.", ''],
 ];
 const ELSEWHERE = [
-  ['2,285', 'LeetCode peak rating', 'Guardian', 'top 1%', 'amber'],
-  ['1,799', 'Codeforces rating', 'Expert', '', 'blue'],
-  ['20k+', 'Dare2Solve members', 'Founder', '', 'violet'],
+  ['2,285', 'peak rating', 'Guardian', 'top 1%', 'amber', 0, 'LeetCode'],
+  ['1,799', 'rating', 'Expert', '', 'blue', 0, 'Codeforces'],
+  ['20k+', 'members', 'Founder', '', 'violet', 0, 'Dare2Solve'],
 ];
+// Chisle's README race: same prompt, visible output tokens (Claude Code + Haiku 4.5).
+const RACE = [['Chisle', 530], ['caveman', 604], ['ponytail', 747], ['no ruleset', 1186]];
 const MERGED_ROWS = 3, REVIEW_ROWS = 2, RECENT_DAYS = 90;
 
 const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI','Inter','Noto Sans',Helvetica,Arial,sans-serif";
@@ -61,6 +63,7 @@ function anim(attr, pts, { ease = false, discrete = false, type } = {}) {
   return `<${tag} attributeName="${attr}"${type ? ` type="${type}"` : ''} values="${p.map((x) => x[1]).join(';')}" keyTimes="${p.map((x) => (x[0] / dur).toFixed(4)).join(';')}" dur="${r2(dur)}s" fill="freeze"` +
     (discrete ? ' calcMode="discrete"' : ease ? ` calcMode="spline" keySplines="${Array(p.length - 1).fill('0.2 0.7 0.2 1').join(';')}"` : '') + '/>';
 }
+const fadeIn = (t0, f = 0.4) => anim('opacity', [[t0, 0], [r2(t0 + f), 1]], { ease: true });
 // A group that fades and rises in at t0.
 const appear = (t0, body, dy = 10, f = 0.55) =>
   `<g>${anim('opacity', [[t0, 0], [r2(t0 + f), 1]], { ease: true })}<g>${anim('transform', [[t0, `0 ${dy}`], [r2(t0 + f), '0 0']], { type: 'translate', ease: true })}${body}</g></g>`;
@@ -84,145 +87,147 @@ const logoId = (org) => `logo-${org.replace(/\W/g, '')}`;
 const logo = (d, org, cx, cy, r) => (d.logos[org] ? `<use href="#${logoId(org)}" transform="translate(${r1(cx - r)} ${r1(cy - r)}) scale(${r2((2 * r) / 64)})"/>` : '');
 const diff = (t, x, y, add, del, fs = 12) => `<text x="${x}" y="${y}" font-family="${MONO}" font-size="${fs}"><tspan fill="${t.green}">+${fmt(add)}</tspan><tspan fill="${t.muted}"> </tspan><tspan fill="${t.red}">−${fmt(del)}</tspan></text>`;
 
-function bento(t, d) {
-  const W = 880, G = 12, LW = 548, RX = LW + G, RW = W - RX;
-  const H1 = 236, YC = H1 + G, HC = 172, Y2 = YC + HC + G, H2 = 330, Y3 = Y2 + H2 + G, H3 = 196, H = Y3 + H3;
-  const o = [];
+// Shared defs: accent gradients, the round clip, and (when asked) the logos.
+function doc(t, d, w, h, label, body, logos = false) {
   const defs = [
     `<radialGradient id="glowA" cx="0.92" cy="0" r="0.65"><stop offset="0" stop-color="${t.a1}" stop-opacity="${t.glow}"/><stop offset="1" stop-color="${t.a1}" stop-opacity="0"/></radialGradient>`,
     `<radialGradient id="glowB" cx="0.55" cy="1.2" r="0.6"><stop offset="0" stop-color="${t.a2}" stop-opacity="${r2(t.glow * 0.7)}"/><stop offset="1" stop-color="${t.a2}" stop-opacity="0"/></radialGradient>`,
     `<linearGradient id="ink" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="${t.a1}"/><stop offset="1" stop-color="${t.a2}"/></linearGradient>`,
     `<linearGradient id="bar" x1="0" x2="1"><stop offset="0" stop-color="${t.a1}"/><stop offset="1" stop-color="${t.a2}"/></linearGradient>`,
     `<clipPath id="round" clipPathUnits="objectBoundingBox"><circle cx="0.5" cy="0.5" r="0.5"/></clipPath>`,
-    ...Object.entries(d.logos).map(([org, uri]) => `<g id="${logoId(org)}"><circle cx="32" cy="32" r="32" fill="#fff"/><image href="${uri}" width="64" height="64" clip-path="url(#round)"/><circle cx="32" cy="32" r="31" fill="none" stroke="${t.edge}" stroke-opacity="${t.edgeOp}" stroke-width="2"/></g>`),
   ];
+  if (logos) defs.push(...Object.entries(d.logos).map(([org, uri]) => `<g id="${logoId(org)}"><circle cx="32" cy="32" r="32" fill="#fff"/><image href="${uri}" width="64" height="64" clip-path="url(#round)"/><circle cx="32" cy="32" r="31" fill="none" stroke="${t.edge}" stroke-opacity="${t.edgeOp}" stroke-width="2"/></g>`));
   if (t.shadow) defs.push(`<filter id="lift" x="-4%" y="-4%" width="108%" height="116%"><feDropShadow dx="0" dy="1" stdDeviation="1.6" flood-color="#1f2328" flood-opacity="${t.shadow}"/></filter>`);
-
-  // ── Impact: merged upstream, where, and how much.
-  {
-    const c = [cardRect(t, 0, 0, W, H1),
-      `<rect x="1" y="1" width="${W - 2}" height="${H1 - 2}" rx="17" fill="url(#glowA)"/><rect x="1" y="1" width="${W - 2}" height="${H1 - 2}" rx="17" fill="url(#glowB)"/>`,
-      `<circle cx="32" cy="38" r="3.5" fill="${t.green}"/>`, eyebrow(t, 44, 42, 'OPEN SOURCE · LIVE FROM GITHUB'),
-      `<text x="${W - 28}" y="42" font-size="12" fill="${t.faint}" text-anchor="end">Updated ${esc(d.stamp)}</text>`,
-      countUp(d.merged, (v) => `${v}`, 0.25, `x="26" y="128" font-size="76" font-weight="750" letter-spacing="-3" fill="url(#ink)"`)];
-    const nx = r1(26 + textW(`${d.merged}`, 76, true) * 0.92 + 18);
-    c.push(appear(0.35, `<text x="${nx}" y="96" font-size="22" font-weight="650" letter-spacing="-0.4" fill="${t.text}">pull requests merged upstream</text>` +
-      `<text x="${nx}" y="124" font-size="15" fill="${t.muted}">into projects with <tspan font-weight="700" fill="${t.text}">${short(d.stars)}</tspan> combined GitHub stars</text>`, 6));
-    // The organisations, as an overlapping logo stack.
-    const orgs = d.byOrg.map(([n]) => n), R = 19, step = 30, sx = W - 28 - R - (orgs.length - 1) * step;
-    c.push(...orgs.map((org, i) => appear(r2(0.45 + i * 0.06),
-      `<circle cx="${sx + i * step}" cy="104" r="${R + 2.5}" fill="${t.card}"/>${logo(d, org, sx + i * step, 104, R)}`, 6, 0.4)));
-    c.push(`<text x="${W - 28}" y="146" font-size="12" fill="${t.muted}" text-anchor="end">${esc(orgs.slice(0, 3).join(', '))}${orgs.length > 3 ? ` and ${orgs.length - 3} more` : ''}</text>`);
-    // Stat strip.
-    const stats = [
-      [diff(t, 0, 0, d.add, d.del, 17), 'lines changed'],
-      [`${d.repos}`, 'repositories'],
-      [`${d.recent}`, `merged in the last ${RECENT_DAYS} days`],
-      [`${d.open}`, 'in review right now'],
-    ];
-    const sw = (W - 52) / stats.length;
-    c.push(`<path d="M26 172H${W - 26}" stroke="${t.rule}"/>`);
-    stats.forEach(([v, label], i) => {
-      const x = r1(26 + i * sw);
-      const value = v.startsWith('<text') ? v.replace('x="0" y="0"', `x="${x}" y="204"`) : `<text x="${x}" y="204" font-size="20" font-weight="700" fill="${t.text}">${esc(v)}</text>`;
-      c.push(appear(r2(0.6 + i * 0.07), value + `<text x="${x}" y="222" font-size="12" fill="${t.muted}">${esc(label)}</text>`, 4));
-      if (i) c.push(`<path d="M${r1(x - 14)} 186V222" stroke="${t.rule}"/>`);
-    });
-    o.push(appear(0.05, c.join(''), 6));
-  }
-
-  // ── Chisle: the project I wrote, and what it measures.
-  {
-    const y = YC, c = [cardRect(t, 0, y, W, HC), eyebrow(t, 24, y + 34, 'CREATED · CHISLE'),
-      `<text x="${W - 24}" y="${y + 34}" font-size="12.5" fill="${t.muted}" text-anchor="end">github.com/JayPokale/Chisle ↗</text>`,
-      `<text x="22" y="${y + 84}" font-family="${MONO}" font-size="38" font-weight="700" letter-spacing="-1" fill="${t.text}">chisle</text>`,
-      `<rect x="${r1(22 + 6 * 38 * 0.6 - 2)}" y="${y + 55}" width="14" height="34" rx="2" fill="url(#ink)"/>`,
-      `<text x="210" y="${y + 66}" font-size="15" fill="${t.text}">Makes AI coding agents talk less, build less, read less and say more.</text>`,
-      `<text x="210" y="${y + 87}" font-size="12.5" fill="${t.muted}">The only tool in its class that publishes the benchmarks it loses.</text>`,
-      `<path d="M24 ${y + 108}H${W - 24}" stroke="${t.rule}"/>`];
-    const stats = [
-      [fmt(d.chisle.stars), 'GitHub stars', t.text], [fmt(d.chisle.downloads), 'npm downloads / month', t.text], ['13', 'agents supported', t.text],
-      ['−45%', 'answer length', t.green], ['−48%', 'oversized tool output', t.green], ['156/156', 'answers still correct', t.green],
-    ];
-    const sw = (W - 48) / stats.length;
-    stats.forEach(([v, label, fill], i) => {
-      const x = r1(24 + i * sw);
-      if (i) c.push(`<path d="M${r1(x - 12)} ${y + 124}V${y + 156}" stroke="${t.rule}"/>`);
-      c.push(appear(r2(0.5 + i * 0.06), `<text x="${x}" y="${y + 140}" font-size="19" font-weight="700" fill="${fill}">${esc(v)}</text><text x="${x}" y="${y + 158}" font-size="11.5" fill="${t.muted}">${esc(label)}</text>`, 4));
-    });
-    o.push(appear(0.15, c.join('')));
-  }
-
-  // ── Latest pull requests, with their size.
-  {
-    const y = Y2, c = [cardRect(t, 0, y, LW, H2), eyebrow(t, 24, y + 34, 'LATEST PULL REQUESTS'),
-      `<text x="${LW - 24}" y="${y + 34}" font-size="12.5" fill="${t.muted}" text-anchor="end">all of them on GitHub ↗</text>`];
-    d.rows.forEach((p, i) => {
-      const top = y + 56 + i * 54, cy = top + 22, status = p.merged ? ['Merged', 'green'] : ['In review', 'amber'];
-      const pw = textW(status[0], 12, true) + 20;
-      const meta = `${p.repo} · ${p.date}`, mw = textW(meta, 12);
-      const row = [logo(d, p.org, 37, cy, 13),
-        `<text x="60" y="${cy - 3}" font-size="14" font-weight="500" fill="${t.text}">${esc(clip(p.title, 14, LW - 24 - pw - 16 - 60, false))}</text>`,
-        `<text x="60" y="${cy + 16}" font-size="12" fill="${t.muted}">${esc(meta)}</text>`,
-        diff(t, r1(60 + mw + 10), cy + 16, p.add, p.del, 11.5),
-        pill(t, LW - 24, cy, ...status)];
-      if (i < d.rows.length - 1) row.push(`<path d="M24 ${top + 50}H${LW - 24}" stroke="${t.rule}"/>`);
-      c.push(appear(r2(0.5 + i * 0.07), row.join(''), 6));
-    });
-    o.push(appear(0.26, c.join('')));
-  }
-
-  // ── By project: merged count, against each project's size.
-  {
-    const x = RX, y = Y2, c = [cardRect(t, x, y, RW, H2), eyebrow(t, x + 24, y + 34, 'MERGED INTO')];
-    const max = Math.max(...d.byOrg.map((r) => r[1])), BX = x + 24, BW = RW - 48;
-    d.byOrg.forEach(([org, n, stars], j) => {
-      const top = y + 54 + j * 39, w = r1(Math.max(5, (n / max) * (BW - 40))), t0 = r2(0.55 + j * 0.06);
-      c.push(logo(d, org, x + 34, top + 10, 10),
-        `<text x="${x + 52}" y="${top + 14.5}" font-size="13.5" font-weight="600" fill="${t.text}">${esc(org)}</text>`,
-        `<text x="${r1(x + 52 + textW(org, 13.5, true) + 8)}" y="${top + 14.5}" font-size="12" fill="${t.faint}">★ ${short(stars)}</text>`,
-        `<text x="${x + RW - 24}" y="${top + 14.5}" font-size="13.5" font-weight="700" fill="${t.text}" text-anchor="end">${n}</text>`,
-        `<rect x="${BX}" y="${top + 23}" width="${BW}" height="5" rx="2.5" fill="${t.track}"/>`,
-        `<rect x="${BX}" y="${top + 23}" width="${w}" height="5" rx="2.5" fill="url(#bar)">${anim('width', [[t0, 0], [r2(t0 + 0.7), w]], { ease: true })}</rect>`);
-    });
-    o.push(appear(0.32, c.join('')));
-  }
-
-  // ── Research.
-  {
-    const y = Y3, c = [cardRect(t, 0, y, LW, H3), eyebrow(t, 24, y + 34, 'RESEARCH'),
-      `<text x="${LW - 24}" y="${y + 34}" font-size="12.5" fill="${t.muted}" text-anchor="end">three theses in progress</text>`];
-    RESEARCH.forEach(([title, line, chip], k) => {
-      const ty = y + 66 + k * 46;
-      c.push(`<text x="24" y="${ty}" font-size="14.5" font-weight="650" fill="${t.text}">${esc(title)}</text>`,
-        `<text x="24" y="${ty + 19}" font-size="12.5" fill="${t.muted}">${esc(line)}</text>`);
-      if (chip) c.push(pill(t, LW - 24, ty - 5, chip, 'green'));
-    });
-    o.push(appear(0.36, c.join('')));
-  }
-
-  // ── Ratings and community.
-  {
-    const x = RX, y = Y3, c = [cardRect(t, x, y, RW, H3), eyebrow(t, x + 24, y + 34, 'RATINGS · COMMUNITY')];
-    ELSEWHERE.forEach(([n, label, badge, note, tone], m) => {
-      const by = y + 76 + m * 44;
-      c.push(appear(r2(0.6 + m * 0.08),
-        `<text x="${x + 24}" y="${by + 4}" font-size="22" font-weight="700" letter-spacing="-0.4" fill="${t.text}">${esc(n)}</text>` +
-        `<text x="${x + 104}" y="${by - 4}" font-size="13" fill="${t.text}">${esc(label)}</text>` +
-        `<text x="${x + 104}" y="${by + 13}" font-size="12" fill="${t.muted}"><tspan font-weight="600" fill="${t[tone]}">${esc(badge)}</tspan>${note ? ` · ${esc(note)}` : ''}</text>`, 4));
-    });
-    o.push(appear(0.44, c.join('')));
-  }
-
-  const label = `Open source, live from GitHub: ${d.merged} pull requests merged upstream into projects with ${short(d.stars)} combined stars (` +
-    d.byOrg.map(([n, k]) => `${n} ${k}`).join(', ') + `); +${d.add} and −${d.del} lines across ${d.repos} repositories; ${d.recent} merged in the last ${RECENT_DAYS} days; ${d.open} in review. Latest: ` +
-    d.rows.map((p) => `${p.repo}, "${p.title}", ${p.merged ? 'merged' : 'in review'} ${p.date}`).join('; ') +
-    '. Research: ' + RESEARCH.map(([a, b]) => `${a}: ${b}`).join(' ') + ' ' + ELSEWHERE.map(([n, l, b, x]) => `${l} ${n}, ${b}${x ? `, ${x}` : ''}`).join('; ') + '.';
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${SANS}" xml:space="preserve" role="img" aria-label="${esc(label)}">
+  // A margin for the light theme's shadow.
+  const m = t.shadow ? 3 : 0;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w + 2 * m}" height="${h + 2 * m}" viewBox="${-m} ${-m} ${w + 2 * m} ${h + 2 * m}" font-family="${SANS}" xml:space="preserve" role="img" aria-label="${esc(label)}">
 <defs>${defs.join('')}</defs>
-${o.join('\n')}
+${cardRect(t, 0, 0, w, h)}
+${body.join('\n')}
 </svg>
 `;
+}
+const glow = (w, h) => `<rect x="1" y="1" width="${w - 2}" height="${h - 2}" rx="17" fill="url(#glowA)"/><rect x="1" y="1" width="${w - 2}" height="${h - 2}" rx="17" fill="url(#glowB)"/>`;
+const strip = (t, stats, x0, w, y) => {
+  const sw = w / stats.length, o = [];
+  stats.forEach(([v, label, fill], i) => {
+    const x = r1(x0 + i * sw);
+    if (i) o.push(`<path d="M${r1(x - 14)} ${y - 16}V${y + 18}" stroke="${t.rule}"/>`);
+    const value = v.startsWith('<text') ? v.replace('x="0" y="0"', `x="${x}" y="${y}"`) : `<text x="${x}" y="${y}" font-size="20" font-weight="700" fill="${fill || t.text}">${esc(v)}</text>`;
+    o.push(appear(r2(0.55 + i * 0.06), value + `<text x="${x}" y="${y + 18}" font-size="12" fill="${t.muted}">${esc(label)}</text>`, 4));
+  });
+  return o.join('');
+};
+
+// ── Chisle: my own project, first.
+function chisle(t, d) {
+  const W = 880, H = 262, BX = 520, BW = W - 24 - (BX + 88) - 52;
+  const max = Math.max(...RACE.map((r) => r[1]));
+  const o = [glow(W, H), eyebrow(t, 24, 38, 'MY PROJECT'),
+    `<text x="${W - 24}" y="38" font-size="12.5" fill="${t.muted}" text-anchor="end">github.com/JayPokale/Chisle ↗</text>`,
+    `<text x="22" y="96" font-family="${MONO}" font-size="46" font-weight="700" letter-spacing="-1.5" fill="${t.text}">chisle</text>`,
+    `<rect x="${r1(22 + 6 * 46 * 0.6 - 4)}" y="61" width="17" height="42" rx="2" fill="url(#ink)"/>`,
+    `<text x="24" y="132" font-size="15.5" fill="${t.text}">Makes AI coding agents talk less, build less,</text>`,
+    `<text x="24" y="154" font-size="15.5" fill="${t.text}">read less and say more.</text>`,
+    `<text x="24" y="178" font-size="12.5" fill="${t.muted}">The only tool in its class that publishes the benchmarks it loses.</text>`,
+    `<text x="${BX}" y="72" font-size="12" fill="${t.muted}">Same prompt · output tokens · lower is better</text>`];
+  RACE.forEach(([name, n], i) => {
+    const y = 90 + i * 24, w = r1((n / max) * BW), t0 = r2(0.4 + i * 0.08), me = i === 0;
+    o.push(`<text x="${BX + 78}" y="${y + 10}" font-size="12.5" font-weight="${me ? 700 : 400}" fill="${me ? t.text : t.muted}" text-anchor="end">${esc(name)}</text>`,
+      `<rect x="${BX + 88}" y="${y}" width="${w}" height="13" rx="4" fill="${me ? 'url(#bar)' : t.muted}" fill-opacity="${me ? 1 : 0.4}">${anim('width', [[t0, 0], [r2(t0 + 0.8), w]], { ease: true })}</rect>`,
+      `<text x="${r1(BX + 88 + w + 8)}" y="${y + 10.5}" font-size="12" font-weight="${me ? 700 : 400}" fill="${me ? t.text : t.muted}">${fadeIn(r2(t0 + 0.7))}${fmt(n)}</text>`);
+  });
+  o.push(`<path d="M24 202H${W - 24}" stroke="${t.rule}"/>`,
+    strip(t, [[fmt(d.chisle.stars), 'GitHub stars'], [fmt(d.chisle.downloads), 'npm downloads / month'], ['13', 'agents supported'],
+      ['−45%', 'answer length', t.green], ['−48%', 'oversized tool output', t.green], ['156/156', 'answers still correct', t.green]], 24, W - 48, 232));
+  return doc(t, d, W, H, `Chisle, my project: makes AI coding agents talk less, build less, read less and say more. ${fmt(d.chisle.stars)} GitHub stars, ${fmt(d.chisle.downloads)} npm downloads a month, 13 agents. Same prompt, output tokens: ` + RACE.map(([a, b]) => `${a} ${b}`).join(', ') + '. Answers 45% shorter, oversized tool output cut 48%, 156 of 156 answers still correct.', o);
+}
+
+// ── Open source: merged upstream, where, and how much.
+function oss(t, d) {
+  const W = 880, H = 236;
+  const o = [glow(W, H), `<circle cx="32" cy="38" r="3.5" fill="${t.green}"/>`, eyebrow(t, 44, 42, 'OPEN SOURCE · LIVE FROM GITHUB'),
+    `<text x="${W - 28}" y="42" font-size="12" fill="${t.faint}" text-anchor="end">Updated ${esc(d.stamp)}</text>`,
+    countUp(d.merged, (v) => `${v}`, 0.25, `x="26" y="128" font-size="76" font-weight="750" letter-spacing="-3" fill="url(#ink)"`)];
+  const nx = r1(26 + textW(`${d.merged}`, 76, true) * 0.92 + 18);
+  o.push(appear(0.35, `<text x="${nx}" y="96" font-size="22" font-weight="650" letter-spacing="-0.4" fill="${t.text}">pull requests merged upstream</text>` +
+    `<text x="${nx}" y="124" font-size="15" fill="${t.muted}">into projects with <tspan font-weight="700" fill="${t.text}">${short(d.stars)}</tspan> combined GitHub stars</text>`, 6));
+  const orgs = d.byOrg.map(([n]) => n), R = 19, step = 30, sx = W - 28 - R - (orgs.length - 1) * step;
+  o.push(...orgs.map((org, i) => appear(r2(0.45 + i * 0.06), `<circle cx="${sx + i * step}" cy="104" r="${R + 2.5}" fill="${t.card}"/>${logo(d, org, sx + i * step, 104, R)}`, 6, 0.4)),
+    `<text x="${W - 28}" y="146" font-size="12" fill="${t.muted}" text-anchor="end">${esc(orgs.slice(0, 3).join(', '))}${orgs.length > 3 ? ` and ${orgs.length - 3} more` : ''}</text>`,
+    `<path d="M26 172H${W - 26}" stroke="${t.rule}"/>`,
+    strip(t, [[diff(t, 0, 0, d.add, d.del, 17), 'lines changed'], [`${d.repos}`, 'repositories'], [`${d.recent}`, `merged in the last ${RECENT_DAYS} days`], [`${d.open}`, 'in review right now']], 26, W - 52, 204));
+  return doc(t, d, W, H, `Open source, live from GitHub: ${d.merged} pull requests merged upstream into projects with ${short(d.stars)} combined stars; +${d.add} and −${d.del} lines across ${d.repos} repositories; ${d.recent} merged in the last ${RECENT_DAYS} days; ${d.open} in review.`, o, true);
+}
+
+// ── Latest pull requests, with their size.
+function prsCard(t, d) {
+  const W = 548, H = 330, o = [eyebrow(t, 24, 34, 'LATEST PULL REQUESTS'), `<text x="${W - 24}" y="34" font-size="12.5" fill="${t.muted}" text-anchor="end">all of them ↗</text>`];
+  d.rows.forEach((p, i) => {
+    const top = 56 + i * 54, cy = top + 22, status = p.merged ? ['Merged', 'green'] : ['In review', 'amber'];
+    const pw = textW(status[0], 12, true) + 20, meta = `${p.repo} · ${p.date}`;
+    const row = [logo(d, p.org, 37, cy, 13),
+      `<text x="60" y="${cy - 3}" font-size="14" font-weight="500" fill="${t.text}">${esc(clip(p.title, 14, W - 24 - pw - 16 - 60, false))}</text>`,
+      `<text x="60" y="${cy + 16}" font-size="12" fill="${t.muted}">${esc(meta)}</text>`,
+      diff(t, r1(60 + textW(meta, 12) + 10), cy + 16, p.add, p.del, 11.5), pill(t, W - 24, cy, ...status)];
+    if (i < d.rows.length - 1) row.push(`<path d="M24 ${top + 50}H${W - 24}" stroke="${t.rule}"/>`);
+    o.push(appear(r2(0.3 + i * 0.07), row.join(''), 6));
+  });
+  return doc(t, d, W, H, 'Latest pull requests: ' + d.rows.map((p) => `${p.repo}, "${p.title}", +${p.add} −${p.del}, ${p.merged ? 'merged' : 'in review'} ${p.date}`).join('; ') + '.', o, true);
+}
+
+// ── By project: merged count, against each project's size.
+function orgsCard(t, d) {
+  const W = 320, H = 330, o = [eyebrow(t, 24, 34, 'MERGED INTO')];
+  const max = Math.max(...d.byOrg.map((r) => r[1])), BW = W - 48;
+  d.byOrg.forEach(([org, n, stars], j) => {
+    const top = 54 + j * 39, w = r1(Math.max(5, (n / max) * (BW - 40))), t0 = r2(0.35 + j * 0.06);
+    o.push(logo(d, org, 34, top + 10, 10),
+      `<text x="52" y="${top + 14.5}" font-size="13.5" font-weight="600" fill="${t.text}">${esc(org)}</text>`,
+      `<text x="${r1(52 + textW(org, 13.5, true) + 8)}" y="${top + 14.5}" font-size="12" fill="${t.faint}">★ ${short(stars)}</text>`,
+      `<text x="${W - 24}" y="${top + 14.5}" font-size="13.5" font-weight="700" fill="${t.text}" text-anchor="end">${n}</text>`,
+      `<rect x="24" y="${top + 23}" width="${BW}" height="5" rx="2.5" fill="${t.track}"/>`,
+      `<rect x="24" y="${top + 23}" width="${w}" height="5" rx="2.5" fill="url(#bar)">${anim('width', [[t0, 0], [r2(t0 + 0.7), w]], { ease: true })}</rect>`);
+  });
+  return doc(t, d, W, H, 'Merged into: ' + d.byOrg.map(([n, k, s]) => `${n} ${k} (${short(s)} stars)`).join(', ') + '.', o, true);
+}
+
+// ── Research.
+function research(t, d) {
+  const W = 880, H = 196, o = [eyebrow(t, 24, 34, 'RESEARCH'), `<text x="${W - 24}" y="34" font-size="12.5" fill="${t.muted}" text-anchor="end">three theses in progress · jaypokale.me ↗</text>`];
+  RESEARCH.forEach(([title, line, chip], k) => {
+    const ty = 66 + k * 46;
+    o.push(appear(r2(0.2 + k * 0.08), `<text x="24" y="${ty}" font-size="15" font-weight="650" fill="${t.text}">${esc(title)}</text>` +
+      `<text x="24" y="${ty + 19}" font-size="13" fill="${t.muted}">${esc(line)}</text>` + (chip ? pill(t, W - 24, ty + 3, chip, 'green') : ''), 5));
+  });
+  return doc(t, d, W, H, 'Research, three theses in progress: ' + RESEARCH.map(([a, b]) => `${a}: ${b}`).join(' '), o);
+}
+
+// ── One rating or community tile.
+function tile(t, d, [n, label, badge, note, tone, , site]) {
+  const W = 288, H = 112;
+  const o = [eyebrow(t, 22, 32, site.toUpperCase()), `<text x="${W - 22}" y="32" font-size="12" fill="${t.muted}" text-anchor="end">↗</text>`,
+    appear(0.3, `<text x="22" y="76" font-size="28" font-weight="750" letter-spacing="-0.6" fill="${t.text}">${esc(n)}</text>` +
+      `<text x="22" y="97" font-size="12.5" fill="${t.muted}">${esc(label)} · <tspan font-weight="600" fill="${t[tone]}">${esc(badge)}</tspan>${note ? ` · ${esc(note)}` : ''}</text>`, 5)];
+  return doc(t, d, W, H, `${site}: ${label} ${n}, ${badge}${note ? `, ${note}` : ''}.`, o);
+}
+
+// ── Follow buttons: one small clickable image each, with its icon.
+const ICONS = {
+  github: (c) => `<path transform="translate(0 0) scale(1.125)" fill="${c}" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/>`,
+  linkedin: () => `<rect width="18" height="18" rx="3.5" fill="#0a66c2"/><text x="9" y="13.6" font-size="11.5" font-weight="800" fill="#fff" text-anchor="middle">in</text>`,
+  x: (c) => `<rect width="18" height="18" rx="3.5" fill="${c}"/><path d="M5 4.5l8 9M13 4.5l-8 9" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`,
+  site: (c) => `<circle cx="9" cy="9" r="7.6" fill="none" stroke="${c}" stroke-width="1.5"/><ellipse cx="9" cy="9" rx="3.4" ry="7.6" fill="none" stroke="${c}" stroke-width="1.3"/><path d="M1.6 9h14.8M3 5h12M3 13h12" stroke="${c}" stroke-width="1.2"/>`,
+  devto: (c) => `<rect width="18" height="18" rx="3.5" fill="${c}"/><text x="9" y="12.4" font-size="7" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="0.2">DEV</text>`,
+  email: (c) => `<rect x="1" y="3.5" width="16" height="11" rx="2.2" fill="none" stroke="${c}" stroke-width="1.5"/><path d="M1.8 4.6L9 10l7.2-5.4" fill="none" stroke="${c}" stroke-width="1.5" stroke-linejoin="round"/>`,
+};
+function follow(t, d, [id, label, count]) {
+  const lw = textW(label, 13.5, true), cw = count ? textW(count, 12, true) + 18 : 0;
+  const W = r1(14 + 18 + 10 + lw + (count ? 10 + cw : 0) + 16), H = 40, ink = t.text === '#1f2328' ? '#1f2328' : '#e6edf3';
+  const o = [`<g transform="translate(14 11)">${ICONS[id](id === 'x' || id === 'devto' ? (ink === '#e6edf3' ? '#000' : '#1f2328') : ink)}</g>`,
+    `<text x="42" y="25" font-size="13.5" font-weight="600" fill="${t.text}">${esc(label)}</text>`];
+  if (count) o.push(`<rect x="${r1(W - 16 - cw)}" y="10" width="${r1(cw)}" height="20" rx="10" fill="${t.track}"/><text x="${r1(W - 16 - cw / 2)}" y="24" font-size="12" font-weight="600" fill="${t.muted}" text-anchor="middle">${esc(count)}</text>`);
+  return doc(t, d, W, H, `${label}${count ? ` (${count})` : ''}`, o).replace('rx="18"', 'rx="20"');
 }
 
 // ── Data (GitHub API only) ───────────────────────────────────────────────────
@@ -284,7 +289,7 @@ async function load() {
     const img = await api(`${u.avatar_url}${u.avatar_url.includes('?') ? '&' : '?'}s=64`, true);
     logos[name] = `data:${img.headers.get('content-type') || 'image/png'};base64,${Buffer.from(await img.arrayBuffer()).toString('base64')}`;
   });
-  const repo = await api(`https://api.github.com/repos/${LOGIN}/Chisle`);
+  const repo = await api(`https://api.github.com/repos/${LOGIN}/Chisle`), me = await api(`https://api.github.com/users/${LOGIN}`);
   const npm = await (await fetch('https://api.npmjs.org/downloads/point/last-month/chisle')).json();
   const now = new Date(), since = now - RECENT_DAYS * 864e5;
   return {
@@ -292,6 +297,7 @@ async function load() {
     stars: Object.values(stars).reduce((s, n) => s + n, 0),
     add: m.reduce((s, p) => s + p.add, 0), del: m.reduce((s, p) => s + p.del, 0),
     recent: m.filter((p) => p.when >= since).length,
+    followers: me.followers,
     chisle: { stars: repo.stargazers_count, downloads: npm.downloads || 0 },
     stamp: `${day(now)} ${now.getUTCFullYear()}, ${now.toISOString().slice(11, 16)} UTC`,
   };
@@ -300,6 +306,12 @@ async function load() {
 load().then((d) => {
   const out = path.resolve(process.argv[2] || 'out');
   fs.mkdirSync(out, { recursive: true });
-  for (const [theme, t] of Object.entries(THEMES)) fs.writeFileSync(path.join(out, `bento-${theme}.svg`), bento(t, d));
-  console.log(`wrote ${out}: bento (dark, light) · ${d.merged} merged into ${d.repos} repos (${d.stars} stars), +${d.add} −${d.del}, ${d.recent} in ${RECENT_DAYS} days, ${d.open} in review`);
+  const FOLLOW = [['github', 'Follow', `${fmt(d.followers)}`], ['linkedin', 'LinkedIn'], ['x', 'X'], ['site', 'jaypokale.me'], ['devto', 'dev.to'], ['email', 'Email']];
+  for (const [theme, t] of Object.entries(THEMES)) {
+    const panels = { chisle, oss, prs: prsCard, orgs: orgsCard, research };
+    for (const [name, build] of Object.entries(panels)) fs.writeFileSync(path.join(out, `${name}-${theme}.svg`), build(t, d));
+    for (const e of ELSEWHERE) fs.writeFileSync(path.join(out, `${e[6].toLowerCase()}-${theme}.svg`), tile(t, d, e));
+    for (const f of FOLLOW) fs.writeFileSync(path.join(out, `follow-${f[0]}-${theme}.svg`), follow(t, d, f));
+  }
+  console.log(`wrote ${out} · ${d.merged} merged, ${d.open} in review, Chisle ${d.chisle.stars} stars, ${d.followers} followers`);
 }).catch((e) => { console.error(e.message); process.exit(1); });
