@@ -1,5 +1,10 @@
 <p align="center">
-  <a href="https://github.com/search?q=is%3Apr+author%3AJayPokale+org%3AClickHouse+org%3Ainterledger+org%3Alancedb+org%3Alance-format+org%3Aballerina-platform+org%3Atemporalio+org%3Apydantic+org%3AWICG&type=pullrequests&s=updated&o=desc"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/board.svg" width="880" alt="A split-flap board, live from GitHub. Header: database internals, retrieval security, coding agents. Rows: my latest pull requests to ClickHouse, Interledger, LanceDB, Ballerina, Temporal, Pydantic and W3C, merged or in review; three theses in progress (GraphRAG certification, semantic-cache attacks cut from 63% to 0%, continual learning); LeetCode Guardian, peak 2,285; Codeforces Expert, 1,799; founder of Dare2Solve, 20,000+ members."></a>
+  <a href="https://github.com/search?q=is%3Apr+author%3AJayPokale+org%3AClickHouse+org%3Ainterledger+org%3Alancedb+org%3Alance-format+org%3Aballerina-platform+org%3Atemporalio+org%3Apydantic+org%3AWICG&type=pullrequests&s=updated&o=desc">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/bento-dark.svg">
+      <img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/bento-light.svg" width="880" alt="Open source, live from GitHub: pull requests merged upstream into ClickHouse, Interledger, LanceDB, Ballerina, Pydantic, Temporal and W3C, with lines changed, repositories, recent pace and what is in review; the latest pull requests with their size and status; merged count per project next to its GitHub stars. Research: three theses in progress. LeetCode Guardian (peak 2,285), Codeforces Expert (1,799), founder of Dare2Solve (20k+ members).">
+    </picture>
+  </a>
 </p>
 
 <p align="center">
