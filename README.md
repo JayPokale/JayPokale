@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/search?q=is%3Apr+is%3Amerged+author%3AJayPokale+org%3AClickHouse+org%3Ainterledger+org%3Alancedb+org%3Alance-format+org%3Aballerina-platform+org%3Atemporalio+org%3Apydantic+org%3AWICG+org%3Anilbuild+org%3Aavelino+org%3AVoltAgent+org%3Adavila7+org%3Anesquena+org%3Aawesome-opencode&type=pullrequests"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/oss-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/oss-light.svg" width="880" alt="Open source, live from GitHub: pull requests merged upstream, the combined stars of those projects, lines changed, repositories, pace over the last 90 days and what is in review."></picture></a>
+  <a href="https://github.com/search?q=is%3Apr+is%3Amerged+author%3AJayPokale+-user%3AJayPokale&type=pullrequests"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/oss-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/oss-light.svg" width="880" alt="Open source, live from GitHub: pull requests merged upstream, the combined stars of those projects, lines changed, repositories, pace over the last 90 days and what is in review."></picture></a>
 </p>
 
 <p align="center">

@@ -269,10 +269,14 @@ async function load() {
     const [owner, repo] = it.repository_url.split('/repos/')[1].split('/');
     return { org: ORGS[owner], repo: `${owner}/${repo}`, api: it.pull_request.url, merged, when: new Date(merged ? it.pull_request.merged_at || it.closed_at : it.created_at), title: tidy(it.title) };
   }).filter((p) => p.org);
+  // Totals count every merged pull request upstream; the lists and logos feature ORGS only.
+  const all = done.map((it) => ({ repo: it.repository_url.split('/repos/')[1], api: it.pull_request.url, when: new Date(it.pull_request.merged_at || it.closed_at) }));
   const m = featured(done, true), r = featured(open, false);
-  // Size of every featured pull request, for the totals and the list.
-  await pool([...m, ...r], async (p) => { const x = await api(p.api); p.add = x.additions; p.del = x.deletions; });
-  const repos = [...new Set(m.map((p) => p.repo))];
+  // Size of every merged and in-review pull request, for the totals and the list.
+  const sized = new Map([...all, ...m, ...r].map((p) => [p.api, p]));
+  await pool([...sized.values()], async (p) => { const x = await api(p.api); p.add = x.additions; p.del = x.deletions; });
+  for (const p of [...all, ...m, ...r]) { const q = sized.get(p.api); p.add = q.add; p.del = q.del; }
+  const repos = [...new Set(all.map((p) => p.repo))];
   const stars = Object.fromEntries(await pool(repos, async (k) => [k, (await api(`https://api.github.com/repos/${k}`)).stargazers_count]));
   const by = {};
   for (const p of m) {
@@ -296,10 +300,10 @@ async function load() {
   const npm = await (await fetch('https://api.npmjs.org/downloads/point/last-month/chisle')).json();
   const now = new Date(), since = now - RECENT_DAYS * 864e5;
   return {
-    rows, byOrg, logos, merged: m.length, open: r.length, repos: repos.length,
+    rows, byOrg, logos, merged: all.length, open: r.length, repos: repos.length,
     stars: Object.values(stars).reduce((s, n) => s + n, 0),
-    add: m.reduce((s, p) => s + p.add, 0), del: m.reduce((s, p) => s + p.del, 0),
-    recent: m.filter((p) => p.when >= since).length,
+    add: all.reduce((s, p) => s + p.add, 0), del: all.reduce((s, p) => s + p.del, 0),
+    recent: all.filter((p) => p.when >= since).length,
     followers: me.followers,
     chisle: { stars: repo.stargazers_count, downloads: npm.downloads || 0 },
     stamp: `${day(now)} ${now.getUTCFullYear()}, ${now.toISOString().slice(11, 16)} UTC`,
