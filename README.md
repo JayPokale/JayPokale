@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/JayPokale/Chisle"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/chisle-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/chisle-light.svg" width="880" alt="Chisle, my project: makes AI coding agents talk less, build less, read less and say more. Live GitHub stars and npm downloads; fewer output tokens than caveman, ponytail and no ruleset on the same prompt; answers 45% shorter, oversized tool output cut 48%, 156 of 156 answers still correct."></picture></a>
+  <a href="https://github.com/JayPokale/Chisle"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JayPokale/JayPokale/output/chisle-dark.svg"><img src="https://raw.githubusercontent.com/JayPokale/JayPokale/output/chisle-light.svg" width="880" alt="Chisle, my project: makes AI coding agents talk less, build less, read less and say more. Live GitHub stars and npm downloads; fewer output tokens than caveman, ponytail and no ruleset on the same prompt; answers 43% shorter, oversized tool output cut 48%, 156 of 156 answers still correct."></picture></a>
 </p>
 
 <p align="center">

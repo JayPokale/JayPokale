@@ -31,7 +31,7 @@ const ELSEWHERE = [
   ['20k+', 'members', 'Founder', '', 'violet', 0, 'Dare2Solve'],
 ];
 // Chisle's README race: same prompt, visible output tokens (Claude Code + Haiku 4.5).
-const RACE = [['Chisle', 530], ['caveman', 604], ['ponytail', 747], ['no ruleset', 1186]];
+const RACE = [['Chisle', 515], ['caveman', 667], ['ponytail', 672], ['no ruleset', 1081]];
 const MERGED_ROWS = 4, REVIEW_ROWS = 2, RECENT_DAYS = 90, LOGO_MAX = 10, ORG_ROWS = 9;
 // Both side-by-side cards share one height: the taller of the two lists.
 const cardH = (d) => Math.max(56 + d.rows.length * 54, 54 + Math.min(d.byOrg.length, ORG_ROWS) * 39) + 4;
@@ -142,8 +142,8 @@ function chisle(t, d) {
   });
   o.push(`<path d="M24 202H${W - 24}" stroke="${t.rule}"/>`,
     strip(t, [[fmt(d.chisle.stars), 'GitHub stars'], [fmt(d.chisle.downloads), 'npm downloads / month'], ['13', 'agents supported'],
-      ['−45%', 'answer length', t.green], ['−48%', 'oversized tool output', t.green], ['156/156', 'answers still correct', t.green]], 24, W - 48, 232));
-  return doc(t, d, W, H, `Chisle, my project: makes AI coding agents talk less, build less, read less and say more. ${fmt(d.chisle.stars)} GitHub stars, ${fmt(d.chisle.downloads)} npm downloads a month, 13 agents. Same prompt, output tokens: ` + RACE.map(([a, b]) => `${a} ${b}`).join(', ') + '. Answers 45% shorter, oversized tool output cut 48%, 156 of 156 answers still correct.', o);
+      ['−43%', 'answer length', t.green], ['−48%', 'oversized tool output', t.green], ['156/156', 'answers still correct', t.green]], 24, W - 48, 232));
+  return doc(t, d, W, H, `Chisle, my project: makes AI coding agents talk less, build less, read less and say more. ${fmt(d.chisle.stars)} GitHub stars, ${fmt(d.chisle.downloads)} npm downloads a month, 13 agents. Same prompt, output tokens: ` + RACE.map(([a, b]) => `${a} ${b}`).join(', ') + '. Answers 43% shorter, oversized tool output cut 48%, 156 of 156 answers still correct.', o);
 }
 
 // ── Open source: merged upstream, where, and how much.
