@@ -17,7 +17,8 @@ const path = require('path');
 const LOGIN = 'JayPokale';
 // Upstream organisations to feature: GitHub owner -> display name. The first
 // owner listed for a name supplies its logo.
-const ORGS = { ClickHouse: 'ClickHouse', interledger: 'Interledger', lancedb: 'LanceDB', 'lance-format': 'LanceDB', 'ballerina-platform': 'Ballerina', temporalio: 'Temporal', pydantic: 'Pydantic', WICG: 'W3C WICG' };
+const ORGS = { ClickHouse: 'ClickHouse', interledger: 'Interledger', lancedb: 'LanceDB', 'lance-format': 'LanceDB', 'ballerina-platform': 'Ballerina', temporalio: 'Temporal', pydantic: 'Pydantic', WICG: 'W3C WICG',
+  nilbuild: 'roadmap.sh', avelino: 'awesome-go', VoltAgent: 'VoltAgent', davila7: 'Claude Code Templates', nesquena: 'Hermes WebUI', 'awesome-opencode': 'awesome-opencode' };
 // Thesis lines as jaypokale.me states them; 63% -> 0% is attack success.
 const RESEARCH = [
   ['Corroboration Is All You Can Certify', 'Poison a knowledge graph; I prove how much of the answer is still true.', ''],
@@ -31,7 +32,9 @@ const ELSEWHERE = [
 ];
 // Chisle's README race: same prompt, visible output tokens (Claude Code + Haiku 4.5).
 const RACE = [['Chisle', 530], ['caveman', 604], ['ponytail', 747], ['no ruleset', 1186]];
-const MERGED_ROWS = 3, REVIEW_ROWS = 2, RECENT_DAYS = 90;
+const MERGED_ROWS = 4, REVIEW_ROWS = 2, RECENT_DAYS = 90, LOGO_MAX = 10, ORG_ROWS = 9;
+// Both side-by-side cards share one height: the taller of the two lists.
+const cardH = (d) => Math.max(56 + d.rows.length * 54, 54 + Math.min(d.byOrg.length, ORG_ROWS) * 39) + 4;
 
 const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI','Inter','Noto Sans',Helvetica,Arial,sans-serif";
 const MONO = "ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace";
@@ -152,9 +155,9 @@ function oss(t, d) {
   const nx = r1(26 + textW(`${d.merged}`, 76, true) * 0.92 + 18);
   o.push(appear(0.35, `<text x="${nx}" y="96" font-size="22" font-weight="650" letter-spacing="-0.4" fill="${t.text}">pull requests merged upstream</text>` +
     `<text x="${nx}" y="124" font-size="15" fill="${t.muted}">into projects with <tspan font-weight="700" fill="${t.text}">${short(d.stars)}</tspan> combined GitHub stars</text>`, 6));
-  const orgs = d.byOrg.map(([n]) => n), R = 19, step = 30, sx = W - 28 - R - (orgs.length - 1) * step;
+  const orgs = d.byOrg.map(([n]) => n).slice(0, LOGO_MAX), R = 19, step = 30, sx = W - 28 - R - (orgs.length - 1) * step;
   o.push(...orgs.map((org, i) => appear(r2(0.45 + i * 0.06), `<circle cx="${sx + i * step}" cy="104" r="${R + 2.5}" fill="${t.card}"/>${logo(d, org, sx + i * step, 104, R)}`, 6, 0.4)),
-    `<text x="${W - 28}" y="146" font-size="12" fill="${t.muted}" text-anchor="end">${esc(orgs.slice(0, 3).join(', '))}${orgs.length > 3 ? ` and ${orgs.length - 3} more` : ''}</text>`,
+    `<text x="${W - 28}" y="146" font-size="12" fill="${t.muted}" text-anchor="end">${esc(orgs.slice(0, 3).join(', '))}${d.byOrg.length > 3 ? ` and ${d.byOrg.length - 3} more` : ''}</text>`,
     `<path d="M26 172H${W - 26}" stroke="${t.rule}"/>`,
     strip(t, [[diff(t, 0, 0, d.add, d.del, 17), 'lines changed'], [`${d.repos}`, 'repositories'], [`${d.recent}`, `merged in the last ${RECENT_DAYS} days`], [`${d.open}`, 'in review right now']], 26, W - 52, 204));
   return doc(t, d, W, H, `Open source, live from GitHub: ${d.merged} pull requests merged upstream into projects with ${short(d.stars)} combined stars; +${d.add} and −${d.del} lines across ${d.repos} repositories; ${d.recent} merged in the last ${RECENT_DAYS} days; ${d.open} in review.`, o, true);
@@ -162,7 +165,7 @@ function oss(t, d) {
 
 // ── Latest pull requests, with their size.
 function prsCard(t, d) {
-  const W = 548, H = 330, o = [eyebrow(t, 24, 34, 'LATEST PULL REQUESTS'), `<text x="${W - 24}" y="34" font-size="12.5" fill="${t.muted}" text-anchor="end">all of them ↗</text>`];
+  const W = 548, H = cardH(d), o = [eyebrow(t, 24, 34, 'LATEST PULL REQUESTS'), `<text x="${W - 24}" y="34" font-size="12.5" fill="${t.muted}" text-anchor="end">all of them ↗</text>`];
   d.rows.forEach((p, i) => {
     const top = 56 + i * 54, cy = top + 22, status = p.merged ? ['Merged', 'green'] : ['In review', 'amber'];
     const pw = textW(status[0], 12, true) + 20, meta = `${p.repo} · ${p.date}`;
@@ -178,9 +181,9 @@ function prsCard(t, d) {
 
 // ── By project: merged count, against each project's size.
 function orgsCard(t, d) {
-  const W = 320, H = 330, o = [eyebrow(t, 24, 34, 'MERGED INTO')];
+  const W = 320, H = cardH(d), o = [eyebrow(t, 24, 34, 'MERGED INTO')];
   const max = Math.max(...d.byOrg.map((r) => r[1])), BW = W - 48;
-  d.byOrg.forEach(([org, n, stars], j) => {
+  d.byOrg.slice(0, ORG_ROWS).forEach(([org, n, stars], j) => {
     const top = 54 + j * 39, w = r1(Math.max(5, (n / max) * (BW - 40))), t0 = r2(0.35 + j * 0.06);
     o.push(logo(d, org, 34, top + 10, 10),
       `<text x="52" y="${top + 14.5}" font-size="13.5" font-weight="600" fill="${t.text}">${esc(org)}</text>`,
